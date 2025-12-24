@@ -1,4 +1,4 @@
-package com.example.lifelog.insight
+package com.example.lifelog.log.structured
 
 interface CategoryCountProjection {
     val category: String

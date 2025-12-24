@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -31,8 +33,9 @@ class AggregatedInsight(
     @Column(nullable = false)
     val totalEventCount: Long,
 
-    @Column(columnDefinition = "jsonb")
-    val categoryCounts: String,
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb", nullable = false)
+    val categoryCounts: Map<String, Long> = emptyMap(),
 
     val createdAt: LocalDateTime = LocalDateTime.now()
 )

@@ -1,6 +1,8 @@
 package com.example.lifelog.ai
 
 import com.example.lifelog.log.event.RawLogCreatedEvent
+import com.example.lifelog.log.structured.StructuredEvent
+import com.example.lifelog.log.structured.StructuredEventRepository
 import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.scheduling.annotation.Async
