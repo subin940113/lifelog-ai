@@ -2,4 +2,8 @@ package com.example.lifelog.log.structured
 
 import org.springframework.data.jpa.repository.JpaRepository
 
-interface StructuredEventRepository : JpaRepository<StructuredEvent, Long>
+interface StructuredEventRepository : JpaRepository<StructuredEvent, Long> {
+    fun findAllByUserIdOrderByOccurredAtDesc(userId: Long): List<StructuredEvent>
+    fun findAllByUserIdAndCategoryOrderByOccurredAtDesc(userId: Long, category: String): List<StructuredEvent>
+    fun findAllByUserIdAndRawLogIdOrderByCreatedAtDesc(userId: Long, rawLogId: Long): List<StructuredEvent>
+}
