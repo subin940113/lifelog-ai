@@ -4,11 +4,14 @@ import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
+import com.example.lifelog.log.event.RawLogCreatedEvent
+import org.springframework.context.ApplicationEventPublisher
 
 @RestController
 @RequestMapping("/api/logs")
 class RawLogController(
-    private val rawLogRepository: RawLogRepository
+    private val rawLogRepository: RawLogRepository,
+    private val eventPublisher: ApplicationEventPublisher
 ) {
 
     data class CreateLogRequest(
@@ -33,6 +36,9 @@ class RawLogController(
                 content = req.content.trim()
             )
         )
+
+        eventPublisher.publishEvent(RawLogCreatedEvent(saved))
+
         return CreateLogResponse(logId = saved.id)
     }
 }
