@@ -1,0 +1,27 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: lifelog
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/lifelog
+    username: postgres
+    password: postgres
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+
+  batch:
+    jdbc:
+      initialize-schema: always
+
+logging:
+  level:
+    org.hibernate.SQL: debug
