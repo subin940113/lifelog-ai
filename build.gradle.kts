@@ -3,6 +3,7 @@ plugins {
     kotlin("plugin.spring") version "2.2.21"
     id("org.springframework.boot") version "4.0.1"
     id("io.spring.dependency-management") version "1.1.7"
+    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
     kotlin("plugin.jpa") version "2.2.21"
 }
 
@@ -54,4 +55,15 @@ allOpen {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+ktlint {
+    version.set("1.5.0")
+    verbose.set(true)
+    outputToConsole.set(true)
+
+    filter {
+        exclude("**/generated/**")
+        include("**/kotlin/**")
+    }
 }
