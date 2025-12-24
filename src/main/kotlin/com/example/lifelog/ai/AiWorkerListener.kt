@@ -7,7 +7,9 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
 
 @Component
-class AiWorkerListener {
+class AiWorkerListener (
+    private val structuredEventRepository: StructuredEventRepository
+) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -17,11 +19,28 @@ class AiWorkerListener {
     @Async
     @EventListener
     fun handle(event: RawLogCreatedEvent) {
-        log.info(
-            "[AI-Worker][MVP] RawLog received. id={}, content={}",
-            event.rawLog.id,
-            event.rawLog.content
+        val raw = event.rawLog
+
+        // MVP: 가짜 구조화 결과
+        val structuredEvent = StructuredEvent(
+            userId = raw.userId,
+            rawLogId = raw.id,
+            category = "SLEEP",
+            occurredAt = raw.createdAt,
+            confidence = 0.8,
+            payload = """
+            {
+              "note": "stub structured result",
+              "originalContent": "${raw.content}"
+            }
+        """.trimIndent()
         )
-        // TODO: 다음 단계에서 LLM 호출 + StructuredEvent 저장 로직 추가
+
+        structuredEventRepository.save(structuredEvent)
+
+        log.info(
+            "[AI-Worker][MVP] StructuredEvent saved. rawLogId={}",
+            raw.id
+        )
     }
 }
