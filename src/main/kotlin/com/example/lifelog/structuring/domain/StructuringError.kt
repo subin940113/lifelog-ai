@@ -24,6 +24,11 @@ sealed class StructuringError(
         override val message: String,
     ) : StructuringError(message)
 
+    data class ExternalFailure(
+        override val message: String,
+        val cause: Throwable? = null,
+    ) : StructuringError(message)
+
     data class Unknown(
         override val message: String,
         val cause: Throwable? = null,

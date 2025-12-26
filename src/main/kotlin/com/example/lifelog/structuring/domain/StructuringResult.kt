@@ -2,7 +2,7 @@ package com.example.lifelog.structuring.domain
 
 sealed class StructuringResult {
     data class Success(
-        val draft: StructuredEventDraft,
+        val drafts: List<StructuredEventDraft>,
         val meta: StructuringMeta = StructuringMeta(),
     ) : StructuringResult()
 

@@ -1,0 +1,43 @@
+{
+  "name": "structured_event_list",
+  "strict": true,
+  "schema": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "subject": {
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string" },
+            "name": { "type": ["string", "null"] },
+            "species": { "type": ["string", "null"] }
+          }
+        },
+        "type": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "occurredAt": { "type": ["string", "null"] },
+        "confidence": { "type": "number" },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "originalContent": { "type": "string" },
+            "summary": { "type": "string" },
+            "signals": { "type": "object" },
+            "evidence": {
+              "type": "object",
+              "properties": {
+                "snippets": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            }
+          },
+          "required": ["originalContent", "summary"]
+        }
+      },
+      "required": ["type", "occurredAt", "payload"]
+    }
+  }
+}

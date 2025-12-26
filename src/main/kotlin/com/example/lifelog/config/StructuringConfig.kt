@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-@EnableConfigurationProperties(LifeLogProperties::class)
+@EnableConfigurationProperties(LifeLogProperties::class, OpenAiProperties::class)
 class StructuringConfig(
     private val props: LifeLogProperties,
 ) {
