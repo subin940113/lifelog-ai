@@ -1,0 +1,27 @@
+### 변수
+@baseUrl = http://localhost:8080
+@contentType = application/json
+
+### 1) 헬스체크(있으면) / 기본 확인용
+GET {{baseUrl}}/
+Accept: {{contentType}}
+
+### 2) RawLog 생성
+POST {{baseUrl}}/api/logs
+Content-Type: {{contentType}}
+
+{
+  "content": "어제 야근해서 저녁 못 먹고 2시에 잠들었다"
+}
+
+### 3) StructuredEvent 전체 조회 (엔드포인트가 있다면)
+GET {{baseUrl}}/api/events
+Accept: {{contentType}}
+
+### 4) StructuredEvent 카테고리 조회 (SLEEP)
+GET {{baseUrl}}/api/events?category=SLEEP
+Accept: {{contentType}}
+
+### 5) 주간 인사이트 조회 (있다면)
+GET {{baseUrl}}/api/insights/weekly
+Accept: {{contentType}}

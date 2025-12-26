@@ -21,9 +21,8 @@ class WeeklyAggregationJobConfig(
     private val jobRepository: JobRepository,
     private val transactionManager: PlatformTransactionManager,
     private val structuredEventRepository: StructuredEventRepository,
-    private val aggregatedInsightRepository: AggregatedInsightRepository
+    private val aggregatedInsightRepository: AggregatedInsightRepository,
 ) {
-
     @Bean
     fun weeklyAggregationJob(): Job =
         JobBuilder("weeklyAggregationJob", jobRepository)
@@ -45,7 +44,12 @@ class WeeklyAggregationJobConfig(
                 val zone = ZoneId.systemDefault()
 
                 val startInstant = weekStart.atStartOfDay(zone).toInstant()
-                val endInstant = weekEnd.plusDays(1).atStartOfDay(zone).minusNanos(1).toInstant()
+                val endInstant =
+                    weekEnd
+                        .plusDays(1)
+                        .atStartOfDay(zone)
+                        .minusNanos(1)
+                        .toInstant()
 
                 val counts = structuredEventRepository.countByCategoryBetween(startInstant, endInstant)
 
@@ -58,12 +62,11 @@ class WeeklyAggregationJobConfig(
                         weekStartDate = weekStart,
                         weekEndDate = weekEnd,
                         totalEventCount = total,
-                        categoryCounts = categoryCounts
-                    )
+                        categoryCounts = categoryCounts,
+                    ),
                 )
 
                 RepeatStatus.FINISHED
-            }
-            .transactionManager(transactionManager)
+            }.transactionManager(transactionManager)
             .build()
 }

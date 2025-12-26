@@ -25,3 +25,6 @@ spring:
 logging:
   level:
     org.hibernate.SQL: debug
+
+lifelog:
+  structurer: pseudo  # pseudo | openai

@@ -1,7 +1,0 @@
-### RawLog 생성
-POST http://localhost:8080/api/logs
-Content-Type: application/json
-
-{
-  "content": "어제 소화가 안되어서 저녁 안먹었다"
-}

@@ -16,26 +16,21 @@ import java.time.LocalDateTime
 @Table(
     name = "aggregated_insight",
     uniqueConstraints = [
-        UniqueConstraint(columnNames = ["week_start_date"])
-    ]
+        UniqueConstraint(columnNames = ["week_start_date"]),
+    ],
 )
 class AggregatedInsight(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
-
     @Column(name = "week_start_date", nullable = false)
     val weekStartDate: LocalDate,
-
     @Column(name = "week_end_date", nullable = false)
     val weekEndDate: LocalDate,
-
     @Column(nullable = false)
     val totalEventCount: Long,
-
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb", nullable = false)
     val categoryCounts: Map<String, Long> = emptyMap(),
-
-    val createdAt: LocalDateTime = LocalDateTime.now()
+    val createdAt: LocalDateTime = LocalDateTime.now(),
 )

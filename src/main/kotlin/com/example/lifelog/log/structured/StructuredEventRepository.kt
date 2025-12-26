@@ -24,10 +24,10 @@ interface StructuredEventRepository : JpaRepository<StructuredEvent, Long> {
     from StructuredEvent e
     where e.occurredAt between :start and :end
     group by e.category
-    """
+    """,
     )
     fun countByCategoryBetween(
         @Param("start") start: Instant,
-        @Param("end") end: Instant
+        @Param("end") end: Instant,
     ): List<CategoryCountProjection>
 }

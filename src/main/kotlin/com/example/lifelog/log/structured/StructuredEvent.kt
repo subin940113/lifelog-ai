@@ -6,6 +6,8 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import java.time.Instant
 
 @Entity
@@ -24,7 +26,8 @@ class StructuredEvent(
     val occurredAt: Instant?,
     @Column(nullable = false)
     val confidence: Double,
-    @Column(nullable = false, columnDefinition = "jsonb")
+    @field:JdbcTypeCode(SqlTypes.JSON)
+    @field:Column(columnDefinition = "jsonb")
     val payload: String,
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: Instant = Instant.now(),
