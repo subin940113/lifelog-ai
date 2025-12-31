@@ -15,6 +15,7 @@ class UserController(
     fun me(): UserMeResponse = userService.getMe()
 
     @PatchMapping("/me")
-    fun updateMe(@RequestBody req: UpdateUserMeRequest): UserMeResponse =
-        userService.updateMe(req)
+    fun updateMe(
+        @RequestBody req: UpdateUserMeRequest,
+    ): UserMeResponse = userService.updateMe(req)
 }

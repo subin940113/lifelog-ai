@@ -12,7 +12,6 @@ class AuthService(
     private val userRepository: UserRepository,
     private val oauthAccountRepository: OAuthAccountRepository,
 ) {
-
     @Transactional
     fun loginGoogle(idToken: String): GoogleLoginResult {
         val profile = googleOAuthProvider.verify(idToken)
@@ -22,6 +21,7 @@ class AuthService(
         }
 
         val providerUserId = profile.providerUserId
+        val displayName = profile.name ?: profile.email!!
 
         // 1️⃣ 이미 연동된 OAuth 계정이 있는지 확인
         val existingAccount =
@@ -31,14 +31,19 @@ class AuthService(
             )
 
         if (existingAccount != null) {
+            val user = userRepository.findById(existingAccount.userId).orElseThrow()
+            user.updateLastLoginAt()
+            userRepository.save(user)
+
             return GoogleLoginResult(
                 accessToken = jwtProvider.createAccessToken(existingAccount.userId),
+                displayName = user.displayName,
                 isNewUser = false,
             )
         }
 
         // 2️⃣ 없으면 → 회원가입
-        val newUser = userRepository.save(User())
+        val newUser = userRepository.save(User(displayName = displayName))
 
         oauthAccountRepository.save(
             OAuthAccount(
@@ -46,13 +51,14 @@ class AuthService(
                 providerUserId = providerUserId,
                 userId = newUser.id,
                 email = profile.email,
-                displayName = profile.name,
+                displayName = displayName,
                 pictureUrl = profile.avatarUrl,
-            )
+            ),
         )
 
         return GoogleLoginResult(
             accessToken = jwtProvider.createAccessToken(newUser.id),
+            displayName = newUser.displayName,
             isNewUser = true,
         )
     }

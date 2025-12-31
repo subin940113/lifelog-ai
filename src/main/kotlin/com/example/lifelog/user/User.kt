@@ -14,11 +14,14 @@ class User(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = 0,
-
-    // Service-owned user profile/state (not tied to a specific OAuth provider)
-    @Column(name = "display_name", nullable = true)
-    var displayName: String? = null,
-
+    @Column(name = "display_name", nullable = false)
+    var displayName: String,
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now(),
-)
+    @Column(name = "last_login_at", nullable = false, updatable = true)
+    var lastLoginAt: Instant = Instant.now(),
+) {
+    fun updateLastLoginAt() {
+        lastLoginAt = Instant.now()
+    }
+}

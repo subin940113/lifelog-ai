@@ -18,8 +18,5 @@ class AuthController(
     @PostMapping("/oauth/google")
     fun google(
         @RequestBody req: GoogleLoginRequest,
-    ): GoogleLoginResult {
-        print(req.idToken)
-        return authService.loginGoogle(req.idToken)
-    }
+    ): GoogleLoginResult = authService.loginGoogle(req.idToken)
 }

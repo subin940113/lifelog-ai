@@ -4,8 +4,9 @@ import java.time.Instant
 
 data class UserMeResponse(
     val id: Long,
-    val displayName: String?,
+    val displayName: String,
     val createdAt: Instant,
+    val lastLoginAt: Instant,
 )
 
 data class UpdateUserMeRequest(
