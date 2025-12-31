@@ -1,10 +1,12 @@
 package com.example.lifelog.log.raw
 
+import com.example.lifelog.auth.security.AuthPrincipal
 import com.example.lifelog.log.event.RawLogCreatedEvent
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.http.HttpStatus
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -30,10 +32,10 @@ class RawLogController(
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun create(
+        @AuthenticationPrincipal principal: AuthPrincipal,
         @Valid @RequestBody req: CreateLogRequest,
     ): CreateLogResponse {
-        // MVP: OAuth2 전이므로 임시 userId
-        val userId = 1L
+        val userId = principal.userId
 
         val saved =
             rawLogRepository.save(

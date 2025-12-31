@@ -1,27 +1,68 @@
 ### 변수
 @baseUrl = http://localhost:8080
-@contentType = application/json
 
-### 1) 헬스체크(있으면) / 기본 확인용
+@contentType = application/json
+@googleIdToken = eyJhbGciOiJSUzI1NiIsImtpZCI6IjQ5NmQwMDhlOGM3YmUxY2FlNDIwOWUwZDVjMjFiMDUwYTYxZTk2MGYiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI3MzcwNjQxOTk0NjAtbDB1dGtubjVnOWplYWUzMzBlbTI5YW5pN2Y3NG5pdDYuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI3MzcwNjQxOTk0NjAtbDB1dGtubjVnOWplYWUzMzBlbTI5YW5pN2Y3NG5pdDYuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDUwNzI2MjEyNTY0NTIxODMzODUiLCJlbWFpbCI6InN1YmluOTQwMTEzQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJhdF9oYXNoIjoiT1ZUS3o2LUNnd1dGR2tKYWhFa0FvZyIsIm5vbmNlIjoiYURheElUQXFPd2NlREpkdUtpX2ZKR1BrczkyV2ZRU1hEUW92QVBSeVJIVSIsIm5hbWUiOiJzdWJpbiBqZW9uZyIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NJS0JCaHF1X3E3b2tOb25PbV85TUNGSUxYYTZHN2hlblJSOFJBd1hFVmhBSmdYSVE9czk2LWMiLCJnaXZlbl9uYW1lIjoic3ViaW4iLCJmYW1pbHlfbmFtZSI6Implb25nIiwiaWF0IjoxNzY3MTQ4NDYzLCJleHAiOjE3NjcxNTIwNjN9.ckDOzwhJgP-3pqOa-q5rNAxRuOnitVUhwDMBo6SsYR3SuO7z63OjHpzVbPRGYLFz6y_-rCkbC1wUDns4JBs3LCnIBYLzGZTHGzYl4LPA9-GS8AwD9NGmj0XqehzFYfqel6YBhOgOWxjtc-tuDVoU6nbS_mk-Q8RlprAHDU2CYvSLt7YeFaIIk3BikRTT_XYWRMzPs6Qv_f6JELlaFk7Z3pYR9xYuSLPq3ONmS2-XGfR6ZOfEqtkTncxwGSUxLTbTFz6tv7KiM2slZJkGLiAtFuIjCMms2opkIpEOHpRvBV_lIWBgqkT_vUOu8xBlbe6cXhjxtA6Ek_YZGiureshOpA
+@accessToken = {{accessToken}}
+
+
+### 헬스체크(있으면) / 기본 확인용
 GET {{baseUrl}}/
 Accept: {{contentType}}
 
-### 2) RawLog 생성
+### Google 로그인 (서버 Access Token 발급)
+POST {{baseUrl}}/api/auth/oauth/google
+Content-Type: {{contentType}}
+
+{
+  "idToken": "{{googleIdToken}}"
+}
+
+> {%
+  client.global.set("accessToken", response.body.accessToken);
+%}
+
+### 내 정보 조회 (/api/users/me)
+GET {{baseUrl}}/api/users/me
+Accept: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+
+### 내 displayName 업데이트 (/api/users/me)
+PATCH {{baseUrl}}/api/users/me
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "displayName": "subin"
+}
+
+
+### 내 정보 재조회 (업데이트 확인)
+GET {{baseUrl}}/api/users/me
+Accept: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+### RawLog 생성
 POST {{baseUrl}}/api/logs
 Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
 
 {
   "content": "어제 야근해서 저녁 못 먹고 2시에 잠들었다"
 }
 
-### 3) StructuredEvent 전체 조회 (엔드포인트가 있다면)
+### StructuredEvent 전체 조회 (엔드포인트가 있다면)
 GET {{baseUrl}}/api/events
 Accept: {{contentType}}
+Authorization: Bearer {{accessToken}}
 
-### 4) StructuredEvent 카테고리 조회 (SLEEP)
+### StructuredEvent 카테고리 조회 (SLEEP)
 GET {{baseUrl}}/api/events?category=SLEEP
 Accept: {{contentType}}
+Authorization: Bearer {{accessToken}}
 
-### 5) 주간 인사이트 조회 (있다면)
+### 주간 인사이트 조회 (있다면)
 GET {{baseUrl}}/api/insights/weekly
 Accept: {{contentType}}
+Authorization: Bearer {{accessToken}}
