@@ -11,6 +11,7 @@ class AuthService(
     private val jwtProvider: JwtProvider,
     private val userRepository: UserRepository,
     private val oauthAccountRepository: OAuthAccountRepository,
+    private val refreshTokenService: RefreshTokenService,
 ) {
     @Transactional
     fun loginGoogle(idToken: String): GoogleLoginResult {
@@ -37,6 +38,7 @@ class AuthService(
 
             return GoogleLoginResult(
                 accessToken = jwtProvider.createAccessToken(existingAccount.userId),
+                refreshToken = refreshTokenService.issueForUser(existingAccount.userId),
                 displayName = user.displayName,
                 isNewUser = false,
             )
@@ -58,8 +60,31 @@ class AuthService(
 
         return GoogleLoginResult(
             accessToken = jwtProvider.createAccessToken(newUser.id),
+            refreshToken = refreshTokenService.issueForUser(newUser.id),
             displayName = newUser.displayName,
             isNewUser = true,
         )
+    }
+
+    fun refresh(req: TokenRefreshRequest): TokenRefreshResponse {
+        val rotation = refreshTokenService.rotate(req.refreshToken)
+        val newAccess = jwtProvider.createAccessToken(rotation.userId)
+        return TokenRefreshResponse(
+            accessToken = newAccess,
+            refreshToken = rotation.newRefreshToken,
+        )
+    }
+
+    @Transactional
+    fun logout(
+        refreshToken: String,
+        allDevices: Boolean = false,
+    ) {
+        if (allDevices) {
+            val userId = refreshTokenService.requireValid(refreshToken).userId
+            refreshTokenService.revokeAllForUser(userId)
+        } else {
+            refreshTokenService.revoke(refreshToken)
+        }
     }
 }
