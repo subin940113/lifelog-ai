@@ -1,12 +1,14 @@
 package com.example.lifelog.user
 
 import com.example.lifelog.auth.security.AuthContext
+import jakarta.persistence.EntityManager
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class UserService(
     private val userRepository: UserRepository,
+    private val em: EntityManager,
 ) {
     @Transactional(readOnly = true)
     fun getMe(): UserMeResponse {
@@ -42,5 +44,17 @@ class UserService(
             createdAt = user.createdAt,
             lastLoginAt = user.lastLoginAt,
         )
+    }
+
+    @Transactional
+    fun deleteMe(userId: Long) {
+        val user =
+            userRepository.findById(userId).orElseThrow {
+                IllegalStateException("User not found: $userId")
+            }
+
+        if (user.deletedAt != null) return
+
+        user.delete()
     }
 }

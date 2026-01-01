@@ -20,8 +20,14 @@ class User(
     var createdAt: Instant = Instant.now(),
     @Column(name = "last_login_at", nullable = false, updatable = true)
     var lastLoginAt: Instant = Instant.now(),
+    @Column(name = "deleted_at", nullable = true, updatable = true)
+    var deletedAt: Instant? = null,
 ) {
     fun updateLastLoginAt() {
         lastLoginAt = Instant.now()
+    }
+
+    fun delete() {
+        deletedAt = Instant.now()
     }
 }
