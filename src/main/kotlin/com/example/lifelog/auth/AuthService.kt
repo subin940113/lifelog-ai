@@ -22,9 +22,8 @@ class AuthService(
         }
 
         val providerUserId = profile.providerUserId
-        val displayName = profile.name ?: profile.email!!
+        val displayName = profile.email!!
 
-        // 1️⃣ 이미 연동된 OAuth 계정이 있는지 확인
         val existingAccount =
             oauthAccountRepository.findByProviderAndProviderUserId(
                 OAuthProvider.GOOGLE,
@@ -44,7 +43,6 @@ class AuthService(
             )
         }
 
-        // 2️⃣ 없으면 → 회원가입
         val newUser = userRepository.save(User(displayName = displayName))
 
         oauthAccountRepository.save(
@@ -52,9 +50,6 @@ class AuthService(
                 provider = OAuthProvider.GOOGLE,
                 providerUserId = providerUserId,
                 userId = newUser.id,
-                email = profile.email,
-                displayName = displayName,
-                pictureUrl = profile.avatarUrl,
             ),
         )
 

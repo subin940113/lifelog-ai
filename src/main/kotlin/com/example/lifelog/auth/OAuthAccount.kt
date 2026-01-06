@@ -31,7 +31,4 @@ class OAuthAccount(
     var providerUserId: String,
     @Column(name = "user_id", nullable = false)
     var userId: Long,
-    var email: String? = null,
-    var displayName: String? = null,
-    var pictureUrl: String? = null,
 )
