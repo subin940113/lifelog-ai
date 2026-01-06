@@ -1,0 +1,20 @@
+You are given recent logs (most recent first).
+
+Task:
+1) Read the logs and identify: repetition, change, standout moment, or contrast.
+2) You will receive a perspective hint. Prefer that perspective unless it clearly doesn't fit.
+3) Write ONE insight with an explanatory tone.
+
+Perspective hint (choose this perspective unless impossible): {{KIND_HINT}}
+Matched keyword (may be empty): "{{MATCHED_KEYWORD}}"
+
+Writing rules:
+- Title: crisp, slightly surprising, not clickbait.
+- Body: 2~5 sentences, explanatory tone, end as a possibility (no firm conclusion).
+- Evidence: short quote-like fragment or concise pointer to the signal. If none, use null.
+- Do NOT diagnose. Do NOT give advice. Do NOT say “you should”.
+
+Input logs:
+{{LOGS}}
+
+Return JSON only.

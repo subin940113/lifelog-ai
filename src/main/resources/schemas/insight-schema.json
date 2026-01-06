@@ -1,0 +1,19 @@
+{
+  "name": "insight_response",
+  "strict": true,
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "kind": {
+        "type": "string",
+        "enum": ["TENDENCY", "PATTERN", "HIGHLIGHT", "WARNING", "CONTRAST", "REFLECTION", "QUESTION"]
+      },
+      "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+      "body": { "type": "string", "minLength": 1, "maxLength": 900 },
+      "evidence": { "type": ["string", "null"], "maxLength": 300 },
+      "keyword": { "type": ["string", "null"], "maxLength": 60 }
+    },
+    "required": ["kind", "title", "body", "evidence", "keyword"]
+  }
+}
