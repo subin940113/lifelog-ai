@@ -4,24 +4,9 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import java.time.Instant
 
 interface RawLogRepository : JpaRepository<RawLog, Long> {
-    // ✅ 모드2(WINDOW)에서 최근 N개를 가져오기 위한 메서드
-    // createdAt desc, id desc 로 정렬해서 안정적으로 최신순
-    @Query(
-        """
-        select r
-        from RawLog r
-        where r.userId = :userId
-        order by r.createdAt desc, r.id desc
-        """,
-    )
-    fun findRecentWindow(
-        @Param("userId") userId: Long,
-        pageable: Pageable,
-    ): List<RawLog>
-
-    // ✅ 기존 list API(cursor)에서 사용하던 메서드들 (유지)
     @Query(
         """
         select r
@@ -61,4 +46,32 @@ interface RawLogRepository : JpaRepository<RawLog, Long> {
         userId: Long,
         pageable: Pageable,
     ): List<RawLog>
+
+    @Query(
+        """
+        select r from RawLog r
+        where r.userId = :userId
+          and r.createdAt >= :since
+        order by r.createdAt desc
+    """,
+    )
+    fun findRecent(
+        userId: Long,
+        since: Instant,
+        pageable: Pageable,
+    ): List<RawLog>
+
+    @Query(
+        """
+        select count(r) > 0 from RawLog r
+        where r.userId = :userId
+          and r.createdAt >= :start
+          and r.createdAt < :end
+    """,
+    )
+    fun existsBetween(
+        userId: Long,
+        start: Instant,
+        end: Instant,
+    ): Boolean
 }

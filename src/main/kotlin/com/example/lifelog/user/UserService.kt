@@ -35,7 +35,7 @@ class UserService(
             }
 
         if (!req.displayName.isNullOrBlank()) {
-            user.displayName = req.displayName.trim()
+            user.updateDisplayName(req.displayName.trim())
         }
 
         return UserMeResponse(

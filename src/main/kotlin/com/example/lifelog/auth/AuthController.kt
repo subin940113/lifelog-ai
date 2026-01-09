@@ -14,7 +14,17 @@ class AuthController(
     @PostMapping("/oauth/google")
     fun google(
         @RequestBody req: GoogleLoginRequest,
-    ): GoogleLoginResult = authService.loginGoogle(req.idToken)
+    ): AuthLoginResult = authService.loginGoogle(req.idToken)
+
+    @PostMapping("/oauth/kakao")
+    fun loginKakao(
+        @RequestBody req: OAuthAccessTokenLoginRequest,
+    ): AuthLoginResult = authService.loginKakao(req.accessToken)
+
+    @PostMapping("/oauth/naver")
+    fun loginNaver(
+        @RequestBody req: OAuthAccessTokenLoginRequest,
+    ): AuthLoginResult = authService.loginNaver(req.accessToken)
 
     @PostMapping("/refresh")
     fun refresh(

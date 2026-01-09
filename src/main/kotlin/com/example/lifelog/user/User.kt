@@ -27,6 +27,10 @@ class User(
         lastLoginAt = Instant.now()
     }
 
+    fun updateDisplayName(displayName: String) {
+        this.displayName = displayName
+    }
+
     fun delete() {
         deletedAt = Instant.now()
     }
