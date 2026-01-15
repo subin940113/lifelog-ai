@@ -12,9 +12,10 @@ import java.time.Instant
 class InsightGenerationService(
     private val triggerPolicy: InsightTriggerPolicy,
     private val contextBuilder: InsightContextBuilder,
-    private val generator: InsightGeneratorRouter, // ✅ 단일 라우터로 주입
+    private val generator: InsightGeneratorRouter,
     private val insightRepo: AiInsightRepository,
     private val cooldownRepo: InsightCooldownRepository,
+    private val eventPublisher: InsightEventPublisher,
     private val clock: Clock = Clock.systemUTC(),
 ) {
     @Transactional
@@ -30,18 +31,29 @@ class InsightGenerationService(
 
         val gen = generator.generate(ctx) ?: return
 
-        insightRepo.save(
-            AiInsight(
-                userId = userId,
-                sourceLogId = ctx.sourceLogId,
-                kind = gen.kind,
-                title = gen.title.take(120),
-                body = gen.body,
-                evidence = gen.evidence,
-                keyword = gen.keyword,
-            ),
-        )
+        val saved =
+            insightRepo.save(
+                AiInsight(
+                    userId = userId,
+                    sourceLogId = ctx.sourceLogId,
+                    kind = gen.kind,
+                    title = gen.title.take(120),
+                    body = gen.body,
+                    evidence = gen.evidence,
+                    keyword = gen.keyword,
+                ),
+            )
 
         cooldownRepo.markRun(userId, Instant.now(clock))
+
+        // ✅ 저장 성공 시점(트랜잭션 커밋 후 푸시 발송되도록 이벤트만 발행)
+        val insightId = saved.id ?: return
+        eventPublisher.publishInsightCreated(
+            InsightCreatedEvent(
+                userId = userId,
+                insightId = insightId,
+                title = saved.title,
+            ),
+        )
     }
 }

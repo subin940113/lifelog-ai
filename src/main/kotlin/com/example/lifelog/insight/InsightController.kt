@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController
 class InsightController(
     private val service: AiInsightService,
 ) {
-    @GetMapping("/api/insights")
+    @GetMapping
     fun list(
         @AuthenticationPrincipal principal: AuthPrincipal,
         @RequestParam(defaultValue = "20") limit: Int,

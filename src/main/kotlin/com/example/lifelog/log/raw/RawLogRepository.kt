@@ -47,31 +47,44 @@ interface RawLogRepository : JpaRepository<RawLog, Long> {
         pageable: Pageable,
     ): List<RawLog>
 
-    @Query(
-        """
-        select r from RawLog r
-        where r.userId = :userId
-          and r.createdAt >= :since
-        order by r.createdAt desc
-    """,
-    )
-    fun findRecent(
-        userId: Long,
-        since: Instant,
-        pageable: Pageable,
-    ): List<RawLog>
+    interface RawLogSlice {
+        val createdAt: Instant
+        val content: String
+    }
 
     @Query(
         """
-        select count(r) > 0 from RawLog r
+        select r.createdAt as createdAt, r.content as content
+        from RawLog r
         where r.userId = :userId
           and r.createdAt >= :start
           and r.createdAt < :end
-    """,
+        order by r.createdAt desc
+        """,
     )
-    fun existsBetween(
+    fun findSliceBetween(
+        @Param("userId") userId: Long,
+        @Param("start") start: Instant,
+        @Param("end") end: Instant,
+        pageable: Pageable,
+    ): List<RawLogSlice>
+
+    fun existsByUserIdAndCreatedAtBetween(
         userId: Long,
         start: Instant,
         end: Instant,
     ): Boolean
+
+    @Query(
+        """
+            select r
+            from RawLog r
+            where r.userId = :userId
+            order by r.createdAt desc, r.id desc
+        """,
+    )
+    fun findLatestByUserId(
+        @Param("userId") userId: Long,
+        pageable: Pageable,
+    ): List<RawLog>
 }

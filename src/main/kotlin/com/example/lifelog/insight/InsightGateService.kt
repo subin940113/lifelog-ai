@@ -13,11 +13,11 @@ class InsightGateService(
     @Transactional(readOnly = true)
     fun getGate(userId: Long): InsightGateState {
         val settingsEnabled = insightSettingsService.getOrDefault(userId).enabled
-        val interest = interestService.getOrDefault(userId)
+        val interests = interestService.get(userId)
 
         // 관심사 키워드 정규화
         val keywords =
-            interest.keywords
+            interests.keywords
                 .map { it.trim() }
                 .filter { it.isNotEmpty() }
 

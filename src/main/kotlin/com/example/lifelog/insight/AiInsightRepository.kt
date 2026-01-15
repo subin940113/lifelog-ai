@@ -7,14 +7,6 @@ import org.springframework.data.repository.query.Param
 import java.time.Instant
 
 interface AiInsightRepository : JpaRepository<AiInsight, Long> {
-    fun findByUserIdOrderByCreatedAtDesc(
-        userId: Long,
-        pageable: Pageable,
-    ): List<AiInsight>
-
-    /**
-     * MVP(Heuristic) 단계: 상태/기간 없이, 유저의 최신 인사이트를 createdAt desc로 가져온다.
-     */
     @Query(
         """
         select a

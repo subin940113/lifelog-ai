@@ -21,6 +21,7 @@ data class RecentLogDto(
 )
 
 data class AiInsightDto(
+    val id: Long,
     val kind: String,
     val title: String,
     val body: String,

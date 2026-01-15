@@ -19,17 +19,7 @@ class InterestController(
     @GetMapping
     fun get(
         @AuthenticationPrincipal principal: AuthPrincipal,
-    ): InterestStateResponse = service.getOrDefault(principal.userId)
-
-    @PostMapping("/enabled")
-    @ResponseStatus(HttpStatus.OK)
-    fun setEnabled(
-        @AuthenticationPrincipal principal: AuthPrincipal,
-        @Valid @RequestBody req: InterestEnabledRequest,
-    ): InterestStateResponse {
-        val enabled = req.enabled ?: throw IllegalArgumentException("enabled는 필수입니다.")
-        return service.setEnabled(principal.userId, enabled)
-    }
+    ): InterestStateResponse = service.get(principal.userId)
 
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
@@ -41,6 +31,7 @@ class InterestController(
         return service.addKeyword(principal.userId, keyword)
     }
 
+    // 기존 클라 변경 최소화를 위해 POST /remove 유지
     @PostMapping("/remove")
     @ResponseStatus(HttpStatus.OK)
     fun removeKeyword(

@@ -71,7 +71,7 @@ class AuthService(
         }
 
         // 신규 유저 생성: displayName이 비면 fallback
-        val safeName = (displayNameCandidate ?: "").trim().ifBlank { "계정" }
+        val safeName = (displayNameCandidate ?: "").trim().ifBlank { NicknameGenerator.generateRandomNickname() }
         val newUser = userRepository.save(User(displayName = safeName))
 
         oauthAccountRepository.save(

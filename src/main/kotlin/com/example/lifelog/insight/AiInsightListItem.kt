@@ -23,7 +23,7 @@ data class AiInsightListItem(
         ): AiInsightListItem {
             val createdAt = entity.createdAt
             return AiInsightListItem(
-                id = entity.id ?: 0L,
+                id = entity.id,
                 kind = entity.kind,
                 title = entity.title,
                 body = entity.body,

@@ -66,6 +66,7 @@ class HomeService(
                     .findLatestByUserId(userId, pageable)
                     .map { a ->
                         AiInsightDto(
+                            id = a.id,
                             kind = a.kind.name,
                             title = a.title,
                             body = a.body,

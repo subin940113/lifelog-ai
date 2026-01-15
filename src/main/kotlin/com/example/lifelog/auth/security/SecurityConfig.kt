@@ -18,6 +18,7 @@ class SecurityConfig(
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
+                it.requestMatchers("/health").permitAll()
                 it.requestMatchers("/api/auth/**").permitAll()
                 it.anyRequest().authenticated()
             }.addFilterBefore(JwtAuthFilter(jwtProvider), UsernamePasswordAuthenticationFilter::class.java)

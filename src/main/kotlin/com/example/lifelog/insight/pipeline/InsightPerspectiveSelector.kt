@@ -1,15 +1,15 @@
 package com.example.lifelog.insight.pipeline
 
 import com.example.lifelog.insight.AiInsightKind
+import com.example.lifelog.insight.feedback.InsightPreferenceReader
 import org.springframework.stereotype.Component
 
 @Component
-class InsightPerspectiveSelector {
-    /**
-     * Return a perspective hint that is least burdensome by default.
-     * Priority: PATTERN > HIGHLIGHT > WARNING > CONTRAST > REFLECTION > QUESTION
-     */
+class InsightPerspectiveSelector(
+    private val preferenceReader: InsightPreferenceReader,
+) {
     fun chooseKindHint(
+        userId: Long,
         selectedLogs: List<String>,
         matchedKeyword: String?,
     ): AiInsightKind {
@@ -20,28 +20,33 @@ class InsightPerspectiveSelector {
         val highlightScore = highlightScore(text)
         val contrastScore = contrastScore(text)
 
-        // Least burdensome first, but require a minimum signal
-        if (repetitionScore >= 3) return AiInsightKind.PATTERN
-        if (highlightScore >= 2) return AiInsightKind.HIGHLIGHT
+        // base 후보들
+        val candidates = mutableListOf<Pair<AiInsightKind, Double>>()
 
-        // WARNING is only a hint when "change" signals are actually present
-        if (changeScore >= 2) return AiInsightKind.WARNING
+        if (repetitionScore >= 3) candidates += AiInsightKind.PATTERN to 1.0
+        if (highlightScore >= 2) candidates += AiInsightKind.HIGHLIGHT to 0.9
+        if (changeScore >= 2) candidates += AiInsightKind.WARNING to 0.8
+        if (contrastScore >= 2) candidates += AiInsightKind.CONTRAST to 0.7
 
-        if (contrastScore >= 2) return AiInsightKind.CONTRAST
+        if (candidates.isEmpty()) candidates += AiInsightKind.REFLECTION to 0.3
 
-        // Fallbacks: keep these rare on Home
-        return AiInsightKind.REFLECTION
+        // ✅ 사용자 가중치 반영
+        val weighted =
+            candidates.map { (kind, base) ->
+                val w = preferenceReader.kindWeight(userId, kind) // -1.5 ~ +1.5
+                kind to (base + w)
+            }
+
+        return weighted.maxBy { it.second }.first
     }
 
-    /**
-     * Post-validate / soften kind to avoid WARNING overproduction.
-     * If model returns WARNING without change signals, downgrade to PATTERN or HIGHLIGHT.
-     */
     fun normalizeKind(
+        userId: Long,
         modelKind: AiInsightKind,
         selectedLogs: List<String>,
         matchedKeyword: String?,
     ): AiInsightKind {
+        // 기존 WARNING 과생산 방지 로직 유지 + 사용자 성향 반영
         val text = selectedLogs.joinToString("\n").lowercase()
         val changeScore = changeScore(text)
         val repetitionScore = repetitionScore(selectedLogs, matchedKeyword)
@@ -54,6 +59,17 @@ class InsightPerspectiveSelector {
                 else -> AiInsightKind.PATTERN
             }
         }
+
+        // 사용자에게 WARNING가 싫은 kind이면 downgrade
+        val w = preferenceReader.kindWeight(userId, modelKind)
+        if (w <= -0.8) {
+            return when {
+                highlightScore >= 2 -> AiInsightKind.HIGHLIGHT
+                repetitionScore >= 3 -> AiInsightKind.PATTERN
+                else -> AiInsightKind.REFLECTION
+            }
+        }
+
         return modelKind
     }
 

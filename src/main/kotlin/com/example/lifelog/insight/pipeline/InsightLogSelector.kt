@@ -1,66 +1,134 @@
 package com.example.lifelog.insight.pipeline
 
 import org.springframework.stereotype.Component
+import java.time.Instant
+import java.time.ZoneId
 import kotlin.math.max
 import kotlin.math.min
 
 @Component
 class InsightLogSelector {
+    data class LogCandidate(
+        val content: String,
+        val createdAt: Instant?,
+    )
+
     fun select(
-        candidates: List<String>,
+        candidates: List<LogCandidate>,
         matchedKeyword: String?,
         maxSelected: Int,
     ): List<String> {
         if (candidates.isEmpty()) return emptyList()
         val safeMax = max(1, min(maxSelected, candidates.size))
 
-        val kw = matchedKeyword?.trim()?.takeIf { it.isNotBlank() }
+        val kw = matchedKeyword?.trim()?.takeIf { it.isNotBlank() }?.lowercase()
 
-        // 1) 스코어링(최근 로그가 앞에 온다고 가정: candidates[0]이 최신)
-        val scored =
-            candidates
-                .mapIndexed { idx, text ->
-                    val recencyScore = (candidates.size - idx).toDouble() // 최신일수록 높음
-                    val keywordScore = if (kw != null && containsIgnoreCase(text, kw)) 1000.0 else 0.0
-                    val shiftScore = emotionShiftSignalScore(text) // 0~수십
-                    val lenScore = min(text.length, 200).toDouble() / 200.0 // 과도한 편향 방지
+        // 1) keyword-hit / non-hit 버킷 분리
+        val (hit, nonHit) =
+            if (kw == null) {
+                candidates to emptyList()
+            } else {
+                candidates.partition { it.content.lowercase().contains(kw) }
+            }
 
-                    val total = keywordScore + recencyScore + shiftScore + lenScore
-                    Scored(text = text, score = total)
-                }.sortedByDescending { it.score }
+        // 2) keyword 쏠림 제한 (기본 60%)
+        val hitQuota = min((safeMax * 0.6).toInt().coerceAtLeast(1), hit.size)
+        val nonQuota = min(safeMax - hitQuota, nonHit.size)
 
-        // 2) 중복 제거(완전 동일/거의 동일 제거) 후 상위 N
-        val picked = ArrayList<String>(safeMax)
-        for (s in scored) {
-            if (picked.size >= safeMax) break
-            if (isNearDuplicate(picked, s.text)) continue
-            picked.add(s.text)
+        val picked = ArrayList<LogCandidate>(safeMax)
+
+        picked += pickWithTimeSpread(hit, hitQuota)
+        picked += pickWithTimeSpread(nonHit, nonQuota)
+
+        // 3) 부족하면 전체에서 채움
+        if (picked.size < safeMax) {
+            val remaining =
+                candidates.filterNot { c -> picked.any { it.content == c.content } }
+            picked += pickWithTimeSpread(remaining, safeMax - picked.size)
         }
 
-        // 3) 너무 빡빡하게 중복 제거해서 개수가 부족하면, 남은 걸 채움(중복 허용 완화)
-        if (picked.size < safeMax) {
+        // 4) 최종 출력은 "most recent first" 유지
+        val chosen = picked.map { it.content }.toSet()
+        return candidates.map { it.content }.filter { it in chosen }.take(safeMax)
+    }
+
+    private fun pickWithTimeSpread(
+        pool: List<LogCandidate>,
+        limit: Int,
+    ): List<LogCandidate> {
+        if (limit <= 0 || pool.isEmpty()) return emptyList()
+
+        val hasTime = pool.any { it.createdAt != null }
+
+        val scored =
+            pool
+                .mapIndexed { idx, c ->
+                    val text = c.content
+
+                    val shiftScore = emotionShiftSignalScore(text) // 변화/대비 신호
+                    val lenScore = min(text.length, 200).toDouble() / 200.0
+
+                    // createdAt 있으면 시간 기반 가중, 없으면 index 기반
+                    val recencyScore =
+                        if (c.createdAt != null) {
+                            c.createdAt.epochSecond.toDouble() / 1_000_000.0
+                        } else {
+                            (pool.size - idx).toDouble()
+                        }
+
+                    val total = (recencyScore * 1.0) + (shiftScore * 1.2) + (lenScore * 0.3)
+                    Scored(c, total)
+                }.sortedByDescending { it.score }
+
+        val picked = ArrayList<LogCandidate>(limit)
+        val usedBuckets = HashSet<String>()
+
+        for (s in scored) {
+            if (picked.size >= limit) break
+            if (isNearDuplicate(picked.map { it.content }, s.candidate.content)) continue
+
+            if (hasTime && s.candidate.createdAt != null) {
+                val bucket = timeBucket(s.candidate.createdAt)
+                if (bucket in usedBuckets) continue
+                usedBuckets.add(bucket)
+            }
+
+            picked.add(s.candidate)
+        }
+
+        // 버킷 때문에 못 채웠으면 완화해서 채움
+        if (picked.size < limit) {
             for (s in scored) {
-                if (picked.size >= safeMax) break
-                if (picked.contains(s.text)) continue
-                picked.add(s.text)
+                if (picked.size >= limit) break
+                if (picked.any { it.content == s.candidate.content }) continue
+                if (isNearDuplicate(picked.map { it.content }, s.candidate.content)) continue
+                picked.add(s.candidate)
             }
         }
 
-        // 최종은 "시간 순"으로 주는 게 LLM이 읽기 편함: 오래된→최신 or 최신→오래된
-        // 여기서는 프롬프트가 "most recent first"라 했으니 최신 우선 유지:
-        val set = picked.toSet()
-        return candidates.filter { it in set }.take(safeMax)
+        return picked
     }
 
     private data class Scored(
-        val text: String,
+        val candidate: LogCandidate,
         val score: Double,
     )
 
-    private fun containsIgnoreCase(
-        text: String,
-        keyword: String,
-    ): Boolean = text.lowercase().contains(keyword.lowercase())
+    private fun timeBucket(t: Instant): String {
+        val z = t.atZone(ZoneId.of("Asia/Seoul"))
+        val day = z.toLocalDate().toString()
+        val hour = z.hour
+
+        val slot =
+            when (hour) {
+                in 0..5 -> "NIGHT"
+                in 6..11 -> "AM"
+                in 12..17 -> "PM"
+                else -> "EVENING"
+            }
+
+        return "$day#$slot"
+    }
 
     /**
      * 감정/상태 변화 힌트(저비용 휴리스틱)
@@ -69,9 +137,9 @@ class InsightLogSelector {
     private fun emotionShiftSignalScore(text: String): Double {
         val t = text.lowercase()
 
-        val pivot = listOf("근데", "하지만", "그런데", "반면", "그래도", "왔다갔다", "오락가락")
-        val fatigue = listOf("피곤", "지침", "무기력", "힘들", "짜증", "우울", "불안", "걱정")
-        val relief = listOf("가벼", "편안", "괜찮", "좋아", "기분", "뿌듯", "만족", "안심")
+        val pivot = listOf("근데", "하지만", "그런데", "반면", "그래도", "왔다갔다", "오락가락", "but", "however", "though", "yet")
+        val fatigue = listOf("피곤", "지침", "무기력", "힘들", "짜증", "우울", "불안", "걱정", "tired", "anx", "worry", "sad")
+        val relief = listOf("가벼", "편안", "괜찮", "좋아", "기분", "뿌듯", "만족", "안심", "fine", "okay", "good", "relief")
 
         var score = 0.0
         if (pivot.any { t.contains(it) }) score += 12.0
@@ -102,7 +170,6 @@ class InsightLogSelector {
             val pp = normalize(p)
             if (pp == c) return true
 
-            // prefix가 매우 비슷하면 중복 취급(짧은 문장에 과민반응 방지)
             val common = commonPrefixLen(pp, c)
             val minLen = min(pp.length, c.length)
             if (minLen >= 40 && common.toDouble() / minLen.toDouble() >= 0.85) return true

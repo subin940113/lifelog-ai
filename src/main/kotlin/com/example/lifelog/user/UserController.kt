@@ -1,5 +1,7 @@
 package com.example.lifelog.user
 
+import com.example.lifelog.auth.security.AuthPrincipal
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -14,15 +16,20 @@ class UserController(
     private val accountWithdrawalService: AccountWithdrawalService,
 ) {
     @GetMapping("/me")
-    fun me(): UserMeResponse = userService.getMe()
+    fun me(
+        @AuthenticationPrincipal principal: AuthPrincipal,
+    ): UserMeResponse = userService.getMe(principal.userId)
 
     @PatchMapping("/me")
     fun updateMe(
+        @AuthenticationPrincipal principal: AuthPrincipal,
         @RequestBody req: UpdateUserMeRequest,
-    ): UserMeResponse = userService.updateMe(req)
+    ): UserMeResponse = userService.updateMe(principal.userId, req)
 
     @DeleteMapping("/me")
-    fun withdrawMe() {
-        accountWithdrawalService.withdrawMe()
+    fun withdrawMe(
+        @AuthenticationPrincipal principal: AuthPrincipal,
+    ) {
+        accountWithdrawalService.withdrawMe(principal.userId)
     }
 }

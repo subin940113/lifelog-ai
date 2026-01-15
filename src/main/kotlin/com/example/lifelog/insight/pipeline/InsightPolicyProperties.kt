@@ -19,10 +19,16 @@ class InsightPolicyProperties {
     var dailyLimit: Int = 5
     var keywordMatchRequired: Boolean = true
 
-    /**
-     * master switch for LLM usage (openai generator will short-circuit if false)
-     */
-    var llmEnabled: Boolean = true
+    val llmEnabled: Boolean = true
+
+    // RECENT_INSIGHTS
+    val recentInsightsHours: Int = 48
+    val maxRecentInsights: Int = 5
+
+    // 언어 fallback
+    val defaultLangCode: String = "ko"
+
+    val dislikeStreakConservativeThreshold: Int = 3
 
     var prompt: PromptProps = PromptProps()
 
