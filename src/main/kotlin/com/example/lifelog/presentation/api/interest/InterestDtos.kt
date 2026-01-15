@@ -10,3 +10,7 @@ data class InterestKeywordRequest(
     @field:NotBlank
     val keyword: String?,
 )
+
+data class InterestResponse(
+    val keywords: List<String>,
+)

@@ -5,15 +5,20 @@ package com.example.lifelog.domain.interest
  */
 interface InterestRepository {
     fun findAllByUserIdOrderByCreatedAtDesc(userId: Long): List<InterestKeyword>
+
     fun countByUserId(userId: Long): Long
+
     fun existsByUserIdAndKeywordKey(
         userId: Long,
         keywordKey: String,
     ): Boolean
+
     fun findByUserIdAndKeywordKey(
         userId: Long,
         keywordKey: String,
     ): InterestKeyword?
+
     fun save(keyword: InterestKeyword): InterestKeyword
+
     fun delete(keyword: InterestKeyword)
 }

@@ -1,5 +1,8 @@
 package com.example.lifelog.infrastructure.external.oauth
 
+import com.example.lifelog.common.exception.BusinessException
+import com.example.lifelog.common.exception.ErrorCode
+import com.example.lifelog.common.exception.ValidationException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
@@ -16,7 +19,9 @@ class NaverOAuthProviderImpl(
 ) : NaverOAuthProvider {
     override fun fetchProfile(naverAccessToken: String): OAuthProfile {
         val token = naverAccessToken.trim()
-        require(token.isNotEmpty()) { "naverAccessToken is empty" }
+        if (token.isEmpty()) {
+            throw ValidationException(ErrorCode.VALIDATION_REQUIRED, "naverAccessToken is empty")
+        }
 
         try {
             val res =
@@ -28,13 +33,14 @@ class NaverOAuthProviderImpl(
                     .retrieve()
                     .bodyToMono(NaverMeResponse::class.java)
                     .timeout(Duration.ofSeconds(8)) // 네이버 응답이 지연되면 여기서 끊김
-                    .block() ?: throw IllegalStateException("Naver /me returned empty body")
+                    .block() ?: throw BusinessException(ErrorCode.BUSINESS_OAUTH_PROVIDER_ERROR, "Naver /me returned empty body")
 
             // 네이버 /me 응답은 resultcode / message / response 구조
-            val body = res.response ?: throw IllegalArgumentException("Naver response is null: ${res.message}")
+            val body =
+                res.response ?: throw BusinessException(ErrorCode.BUSINESS_OAUTH_PROVIDER_ERROR, "Naver response is null: ${res.message}")
 
             return OAuthProfile(
-                providerUserId = body.id ?: throw IllegalArgumentException("Naver id missing"),
+                providerUserId = body.id ?: throw BusinessException(ErrorCode.BUSINESS_OAUTH_PROVIDER_ERROR, "Naver id missing"),
                 email = body.email,
                 displayName = body.name ?: body.nickname ?: body.email,
             )
@@ -42,7 +48,7 @@ class NaverOAuthProviderImpl(
             // ★ 여기가 핵심: 네이버가 준 바디를 반드시 로그로 남겨야 원인을 확정 가능
             // (토큰 만료/잘못된 토큰/권한 부족 등)
             val responseBody = e.responseBodyAsString
-            throw IllegalArgumentException("Naver unauthorized (401). body=$responseBody", e)
+            throw BusinessException(ErrorCode.BUSINESS_OAUTH_UNAUTHORIZED, "Naver unauthorized (401). body=$responseBody", e)
         }
     }
 }

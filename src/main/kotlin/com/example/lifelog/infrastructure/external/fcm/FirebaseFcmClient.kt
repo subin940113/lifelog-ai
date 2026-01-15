@@ -1,5 +1,7 @@
 package com.example.lifelog.infrastructure.external.fcm
 
+import com.example.lifelog.common.exception.BusinessException
+import com.example.lifelog.common.exception.ErrorCode
 import com.example.lifelog.domain.push.PushTokenRepository
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
@@ -68,10 +70,10 @@ class FirebaseFcmClient(
             }
 
             log.warn("[FCM] failed tokenPrefix={} title={}", token.take(8), title, e)
-            throw e
+            throw BusinessException(ErrorCode.EXTERNAL_FCM_ERROR, "FCM send failed: ${e.message}", e)
         } catch (e: Exception) {
             log.warn("[FCM] failed tokenPrefix={} title={}", token.take(8), title, e)
-            throw e
+            throw BusinessException(ErrorCode.EXTERNAL_FCM_ERROR, "FCM send failed: ${e.message}", e)
         }
     }
 }

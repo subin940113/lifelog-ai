@@ -1,5 +1,7 @@
 package com.example.lifelog.domain.user
 
+import com.example.lifelog.common.exception.ErrorCode
+import com.example.lifelog.common.exception.ValidationException
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -37,7 +39,9 @@ class User(
      * 표시 이름 업데이트
      */
     fun updateDisplayName(displayName: String) {
-        require(displayName.isNotBlank()) { "displayName cannot be blank" }
+        if (displayName.isBlank()) {
+            throw ValidationException(ErrorCode.VALIDATION_REQUIRED, "displayName cannot be blank")
+        }
         this.displayName = displayName
     }
 
@@ -51,7 +55,5 @@ class User(
     /**
      * 사용자가 삭제되었는지 확인
      */
-    fun isDeleted(): Boolean {
-        return deletedAt != null
-    }
+    fun isDeleted(): Boolean = deletedAt != null
 }

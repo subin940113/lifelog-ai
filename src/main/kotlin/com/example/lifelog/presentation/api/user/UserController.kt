@@ -25,17 +25,19 @@ class UserController(
     private val withdrawUserUseCase: WithdrawUserUseCase,
 ) {
     @GetMapping("/me")
-    fun getMe(@AuthenticationPrincipal principal: AuthPrincipal): UserResponse =
-        getUserUseCase.execute(principal.userId)
+    fun getMe(
+        @AuthenticationPrincipal principal: AuthPrincipal,
+    ): UserResponse = getUserUseCase.execute(principal.userId)
 
     @PatchMapping("/me")
     fun updateMe(
         @AuthenticationPrincipal principal: AuthPrincipal,
         @RequestBody request: UpdateUserRequest,
-    ): UserResponse = updateUserUseCase.execute(
-        userId = principal.userId,
-        request = request,
-    )
+    ): UserResponse =
+        updateUserUseCase.execute(
+            userId = principal.userId,
+            request = request,
+        )
 
     @DeleteMapping("/me")
     fun withdrawMe(

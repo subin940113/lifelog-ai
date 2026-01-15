@@ -1,7 +1,6 @@
 package com.example.lifelog.infrastructure.persistence.insight
 
 import com.example.lifelog.domain.insight.Insight
-import com.example.lifelog.domain.insight.InsightRepository
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query

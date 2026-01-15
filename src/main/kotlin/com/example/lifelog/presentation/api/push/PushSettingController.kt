@@ -1,6 +1,7 @@
 package com.example.lifelog.presentation.api.push
 
-import com.example.lifelog.application.push.ManagePushSettingUseCase
+import com.example.lifelog.application.push.GetPushSettingUseCase
+import com.example.lifelog.application.push.UpdatePushSettingUseCase
 import com.example.lifelog.infrastructure.security.AuthPrincipal
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
@@ -15,14 +16,15 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/push/settings")
 class PushSettingController(
-    private val managePushSettingUseCase: ManagePushSettingUseCase,
+    private val getPushSettingUseCase: GetPushSettingUseCase,
+    private val updatePushSettingUseCase: UpdatePushSettingUseCase,
 ) {
     @GetMapping
     fun get(
         @AuthenticationPrincipal principal: AuthPrincipal,
     ): PushSettingResponse {
         val userId = principal.userId
-        val pushSetting = managePushSettingUseCase.get(userId)
+        val pushSetting = getPushSettingUseCase.execute(userId)
         return PushSettingResponse(enabled = pushSetting.enabled)
     }
 
@@ -32,7 +34,7 @@ class PushSettingController(
         @RequestBody request: PushSettingUpdateRequest,
     ): PushSettingResponse {
         val userId = principal.userId
-        val pushSetting = managePushSettingUseCase.setEnabled(userId, request.enabled)
+        val pushSetting = updatePushSettingUseCase.execute(userId, request.enabled)
         return PushSettingResponse(enabled = pushSetting.enabled)
     }
 }

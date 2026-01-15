@@ -12,10 +12,10 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 
 /**
- * 인사이트 생성 시 푸시 발송 서비스
+ * 인사이트 생성 시 푸시 발송 Use Case
  */
 @Service
-class InsightCreatedPushService(
+class SendInsightCreatedPushUseCase(
     private val pushTokenRepository: PushTokenRepository,
     private val pushSendLogRepository: PushSendLogRepository,
     private val fcmClient: FcmClient,
@@ -24,7 +24,7 @@ class InsightCreatedPushService(
     private val zone: ZoneId = ZoneId.of(properties.zone)
 
     @Transactional
-    fun onInsightCreated(
+    fun execute(
         userId: Long,
         insightId: Long,
         insightTitle: String,

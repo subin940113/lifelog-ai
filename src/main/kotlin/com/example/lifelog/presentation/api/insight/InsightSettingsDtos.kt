@@ -6,3 +6,7 @@ data class InsightSettingsUpsertRequest(
     @field:NotNull
     var enabled: Boolean?,
 )
+
+data class InsightSettingsResponse(
+    val enabled: Boolean,
+)

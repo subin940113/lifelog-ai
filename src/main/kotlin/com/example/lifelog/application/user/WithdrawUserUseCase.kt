@@ -1,5 +1,7 @@
 package com.example.lifelog.application.user
 
+import com.example.lifelog.common.exception.ErrorCode
+import com.example.lifelog.common.exception.NotFoundException
 import com.example.lifelog.domain.auth.OAuthAccountRepository
 import com.example.lifelog.domain.auth.RefreshTokenRepository
 import com.example.lifelog.domain.user.UserRepository
@@ -19,7 +21,7 @@ class WithdrawUserUseCase(
     fun execute(userId: Long) {
         val user =
             userRepository.findById(userId)
-                ?: throw IllegalStateException("User not found: $userId")
+                ?: throw NotFoundException(ErrorCode.NOT_FOUND_USER, "User not found: $userId")
 
         if (user.isDeleted()) return
 

@@ -1,15 +1,17 @@
 package com.example.lifelog.application.auth
 
 import com.example.lifelog.common.NicknameGenerator
-import com.example.lifelog.infrastructure.external.oauth.GoogleOAuthProvider
-import com.example.lifelog.infrastructure.external.oauth.KakaoOAuthProvider
-import com.example.lifelog.infrastructure.external.oauth.NaverOAuthProvider
-import com.example.lifelog.infrastructure.security.JwtProvider
+import com.example.lifelog.common.exception.ErrorCode
+import com.example.lifelog.common.exception.NotFoundException
 import com.example.lifelog.domain.auth.OAuthAccount
 import com.example.lifelog.domain.auth.OAuthAccountRepository
 import com.example.lifelog.domain.auth.OAuthProvider
 import com.example.lifelog.domain.user.User
 import com.example.lifelog.domain.user.UserRepository
+import com.example.lifelog.infrastructure.external.oauth.GoogleOAuthProvider
+import com.example.lifelog.infrastructure.external.oauth.KakaoOAuthProvider
+import com.example.lifelog.infrastructure.external.oauth.NaverOAuthProvider
+import com.example.lifelog.infrastructure.security.JwtProvider
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -24,7 +26,7 @@ class LoginUseCase(
     private val jwtProvider: JwtProvider,
     private val userRepository: UserRepository,
     private val oauthAccountRepository: OAuthAccountRepository,
-    private val refreshTokenService: RefreshTokenService,
+    private val refreshTokenManagementUseCase: RefreshTokenManagementUseCase,
 ) {
     @Transactional
     fun loginGoogle(idToken: String): AuthLoginResult {
@@ -69,14 +71,15 @@ class LoginUseCase(
             oauthAccountRepository.findByProviderAndProviderUserId(provider, providerUserId)
 
         if (existingAccount != null) {
-            val user = userRepository.findById(existingAccount.userId)
-                ?: throw IllegalStateException("User not found: ${existingAccount.userId}")
+            val user =
+                userRepository.findById(existingAccount.userId)
+                    ?: throw NotFoundException(ErrorCode.NOT_FOUND_USER, "User not found: ${existingAccount.userId}")
             user.updateLastLoginAt()
             userRepository.save(user)
 
             return AuthLoginResult(
                 accessToken = jwtProvider.createAccessToken(existingAccount.userId),
-                refreshToken = refreshTokenService.issueForUser(existingAccount.userId),
+                refreshToken = refreshTokenManagementUseCase.issueForUser(existingAccount.userId),
                 displayName = user.displayName,
                 isNewUser = false,
             )
@@ -96,7 +99,7 @@ class LoginUseCase(
 
         return AuthLoginResult(
             accessToken = jwtProvider.createAccessToken(newUser.id),
-            refreshToken = refreshTokenService.issueForUser(newUser.id),
+            refreshToken = refreshTokenManagementUseCase.issueForUser(newUser.id),
             displayName = newUser.displayName,
             isNewUser = true,
         )

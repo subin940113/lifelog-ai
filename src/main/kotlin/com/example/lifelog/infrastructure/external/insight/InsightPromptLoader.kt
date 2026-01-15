@@ -1,5 +1,7 @@
 package com.example.lifelog.infrastructure.external.insight
 
+import com.example.lifelog.common.exception.ErrorCode
+import com.example.lifelog.common.exception.NotFoundException
 import com.example.lifelog.infrastructure.config.InsightPolicyProperties
 import org.springframework.stereotype.Component
 
@@ -18,5 +20,5 @@ class InsightPromptLoader(
 
     private fun read(resourcePath: String): String =
         javaClass.getResource(resourcePath)?.readText()
-            ?: throw IllegalArgumentException("Resource not found: $resourcePath")
+            ?: throw NotFoundException(ErrorCode.NOT_FOUND_RESOURCE, "Resource not found: $resourcePath")
 }

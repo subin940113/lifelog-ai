@@ -8,9 +8,11 @@ interface InsightFeedbackRepository {
         userId: Long,
         insightId: Long,
     ): Boolean
+
     fun findByUserIdAndInsightId(
         userId: Long,
         insightId: Long,
     ): InsightFeedback?
+
     fun save(feedback: InsightFeedback): InsightFeedback
 }

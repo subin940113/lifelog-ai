@@ -9,4 +9,6 @@ import org.springframework.stereotype.Repository
  * User 도메인 리포지토리 JPA 구현체
  */
 @Repository
-interface JpaUserRepository : JpaRepository<User, Long>, UserRepository
+interface JpaUserRepository :
+    JpaRepository<User, Long>,
+    UserRepository

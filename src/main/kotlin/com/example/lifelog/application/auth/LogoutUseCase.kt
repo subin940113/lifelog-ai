@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional
  */
 @Service
 class LogoutUseCase(
-    private val refreshTokenService: RefreshTokenService,
+    private val refreshTokenManagementUseCase: RefreshTokenManagementUseCase,
 ) {
     @Transactional
     fun logout(
@@ -16,10 +16,10 @@ class LogoutUseCase(
         allDevices: Boolean = false,
     ) {
         if (allDevices) {
-            val userId = refreshTokenService.requireValid(refreshToken).userId
-            refreshTokenService.revokeAllForUser(userId)
+            val userId = refreshTokenManagementUseCase.requireValid(refreshToken).userId
+            refreshTokenManagementUseCase.revokeAllForUser(userId)
         } else {
-            refreshTokenService.revoke(refreshToken)
+            refreshTokenManagementUseCase.revoke(refreshToken)
         }
     }
 }

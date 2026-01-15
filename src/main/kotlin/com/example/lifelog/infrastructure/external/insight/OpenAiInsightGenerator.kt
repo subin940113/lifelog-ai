@@ -23,7 +23,6 @@ class OpenAiInsightGenerator(
     private val perspectiveSelector: InsightPerspectiveSelector,
     private val properties: InsightPolicyProperties,
 ) : InsightGenerator {
-
     override fun generate(ctx: InsightContext): GeneratedInsight? {
         if (!properties.llmEnabled) return null
 
@@ -93,8 +92,8 @@ class OpenAiInsightGenerator(
             } else {
                 val system2 =
                     system +
-                            "\nCRITICAL: title, body, evidence, keyword MUST be written in ${langSpec.instruction}. " +
-                            "Never mix languages. If you cannot comply, set should_generate=false and null fields."
+                        "\nCRITICAL: title, body, evidence, keyword MUST be written in ${langSpec.instruction}. " +
+                        "Never mix languages. If you cannot comply, set should_generate=false and null fields."
 
                 val json2 =
                     openAiClient
@@ -152,8 +151,16 @@ class OpenAiInsightGenerator(
             .mapIndexed { idx, it ->
                 val n = idx + 1
                 val created = it.createdAt.atZone(tz).format(fmt)
-                val title = it.title.replace("\n", " ").trim().take(80)
-                val body = it.body.replace("\n", " ").trim().take(220)
+                val title =
+                    it.title
+                        .replace("\n", " ")
+                        .trim()
+                        .take(80)
+                val body =
+                    it.body
+                        .replace("\n", " ")
+                        .trim()
+                        .take(220)
                 "$n) [$created] [${it.kind}] $title — $body"
             }.joinToString("\n")
     }
@@ -171,7 +178,10 @@ class OpenAiInsightGenerator(
         val requiredAnyOf: Set<Script>,
     )
 
-    private fun resolveLangSpec(codeRaw: String, defaultCode: String): LangSpec {
+    private fun resolveLangSpec(
+        codeRaw: String,
+        defaultCode: String,
+    ): LangSpec {
         val code = codeRaw.lowercase().ifBlank { defaultCode.lowercase() }
 
         return when (code) {
@@ -208,7 +218,10 @@ class OpenAiInsightGenerator(
         }
     }
 
-    private fun languageOkForFields(spec: LangSpec, parsed: GeneratedInsight): Boolean {
+    private fun languageOkForFields(
+        spec: LangSpec,
+        parsed: GeneratedInsight,
+    ): Boolean {
         val merged =
             listOf(parsed.title, parsed.body, parsed.evidence, parsed.keyword)
                 .filterNotNull()
@@ -281,15 +294,15 @@ class OpenAiInsightGenerator(
 
     private fun isHangul(ch: Char): Boolean =
         (ch in '\uAC00'..'\uD7A3') ||
-                (ch in '\u1100'..'\u11FF') ||
-                (ch in '\u3130'..'\u318F')
+            (ch in '\u1100'..'\u11FF') ||
+            (ch in '\u3130'..'\u318F')
 
     private fun isKana(ch: Char): Boolean =
         (ch in '\u3040'..'\u309F') ||
-                (ch in '\u30A0'..'\u30FF') ||
-                (ch in '\u31F0'..'\u31FF')
+            (ch in '\u30A0'..'\u30FF') ||
+            (ch in '\u31F0'..'\u31FF')
 
     private fun isCjkIdeograph(ch: Char): Boolean =
         (ch in '\u4E00'..'\u9FFF') ||
-                (ch in '\u3400'..'\u4DBF')
+            (ch in '\u3400'..'\u4DBF')
 }

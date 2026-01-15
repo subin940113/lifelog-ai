@@ -1,5 +1,7 @@
 package com.example.lifelog.application.user
 
+import com.example.lifelog.common.exception.ErrorCode
+import com.example.lifelog.common.exception.NotFoundException
 import com.example.lifelog.domain.user.User
 import com.example.lifelog.domain.user.UserRepository
 import org.springframework.stereotype.Service
@@ -16,7 +18,7 @@ class GetUserUseCase(
     fun execute(userId: Long): UserResponse {
         val user =
             userRepository.findById(userId)
-                ?: throw IllegalStateException("User not found: $userId")
+                ?: throw NotFoundException(ErrorCode.NOT_FOUND_USER, "User not found: $userId")
 
         return UserResponse.from(user)
     }
@@ -36,7 +38,7 @@ class UpdateUserUseCase(
     ): UserResponse {
         val user =
             userRepository.findById(userId)
-                ?: throw IllegalStateException("User not found: $userId")
+                ?: throw NotFoundException(ErrorCode.NOT_FOUND_USER, "User not found: $userId")
 
         if (!request.displayName.isNullOrBlank()) {
             user.updateDisplayName(request.displayName.trim())
@@ -57,14 +59,13 @@ data class UserResponse(
     val lastLoginAt: java.time.Instant,
 ) {
     companion object {
-        fun from(user: User): UserResponse {
-            return UserResponse(
+        fun from(user: User): UserResponse =
+            UserResponse(
                 id = user.id,
                 displayName = user.displayName,
                 createdAt = user.createdAt,
                 lastLoginAt = user.lastLoginAt,
             )
-        }
     }
 }
 

@@ -15,11 +15,15 @@ class InsightRepositoryAdapter(
 
     override fun findById(id: Long): Insight? = jpaRepository.findById(id).orElse(null)
 
-    override fun findLatestByUserId(userId: Long, pageable: org.springframework.data.domain.Pageable): List<Insight> =
-        jpaRepository.findLatestByUserId(userId, pageable)
+    override fun findLatestByUserId(
+        userId: Long,
+        pageable: org.springframework.data.domain.Pageable,
+    ): List<Insight> = jpaRepository.findLatestByUserId(userId, pageable)
 
-    override fun findFirstPage(userId: Long, pageable: org.springframework.data.domain.Pageable): List<Insight> =
-        jpaRepository.findFirstPage(userId, pageable)
+    override fun findFirstPage(
+        userId: Long,
+        pageable: org.springframework.data.domain.Pageable,
+    ): List<Insight> = jpaRepository.findFirstPage(userId, pageable)
 
     override fun findNextPage(
         userId: Long,

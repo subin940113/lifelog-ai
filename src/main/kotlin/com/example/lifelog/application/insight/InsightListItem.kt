@@ -7,7 +7,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /**
- * 인사이트 목록 아이템 DTO
+ * 인사이트 목록 아이템 응답
  */
 data class InsightListItem(
     val id: Long,

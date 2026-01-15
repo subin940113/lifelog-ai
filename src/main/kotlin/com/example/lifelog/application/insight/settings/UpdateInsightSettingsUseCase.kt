@@ -2,25 +2,20 @@ package com.example.lifelog.application.insight.settings
 
 import com.example.lifelog.domain.insight.settings.InsightSettings
 import com.example.lifelog.domain.insight.settings.InsightSettingsRepository
+import com.example.lifelog.presentation.api.insight.InsightSettingsResponse
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 
 /**
- * 인사이트 설정 관리 Use Case
+ * 인사이트 설정 업데이트 Use Case
  */
 @Service
-class ManageInsightSettingsUseCase(
+class UpdateInsightSettingsUseCase(
     private val settingsRepository: InsightSettingsRepository,
 ) {
-    @Transactional(readOnly = true)
-    fun getOrDefault(userId: Long): InsightSettingsResponse {
-        val settings = settingsRepository.findByUserId(userId)
-        return InsightSettingsResponse(enabled = settings?.enabled ?: false)
-    }
-
     @Transactional
-    fun upsert(
+    fun execute(
         userId: Long,
         enabled: Boolean,
     ): InsightSettingsResponse {
@@ -44,10 +39,3 @@ class ManageInsightSettingsUseCase(
         return InsightSettingsResponse(enabled = enabled)
     }
 }
-
-/**
- * 인사이트 설정 응답 DTO
- */
-data class InsightSettingsResponse(
-    val enabled: Boolean,
-)

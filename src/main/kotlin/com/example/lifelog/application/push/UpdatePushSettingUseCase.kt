@@ -7,27 +7,21 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 /**
- * 푸시 설정 관리 Use Case
+ * 푸시 설정 업데이트 Use Case
  */
 @Service
-class ManagePushSettingUseCase(
+class UpdatePushSettingUseCase(
     private val pushSettingRepository: PushSettingRepository,
     private val pushTokenRepository: PushTokenRepository,
 ) {
-    @Transactional(readOnly = true)
-    fun get(userId: Long): PushSetting {
-        // 없으면 "기본 ON"으로 간주
-        return pushSettingRepository.findById(userId)
-            ?: PushSetting(userId = userId, enabled = true)
-    }
-
     @Transactional
-    fun setEnabled(
+    fun execute(
         userId: Long,
         enabled: Boolean,
     ): PushSetting {
-        val setting = pushSettingRepository.findById(userId)
-            ?: PushSetting(userId = userId, enabled = true)
+        val setting =
+            pushSettingRepository.findById(userId)
+                ?: PushSetting(userId = userId, enabled = true)
 
         if (enabled) {
             setting.enable()

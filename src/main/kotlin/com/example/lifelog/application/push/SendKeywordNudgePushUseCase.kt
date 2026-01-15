@@ -16,10 +16,10 @@ import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 
 /**
- * 키워드 기반 푸시 발송 서비스
+ * 키워드 기반 푸시 발송 Use Case
  */
 @Service
-class KeywordNudgePushService(
+class SendKeywordNudgePushUseCase(
     private val interestRepository: InterestRepository,
     private val pushTokenRepository: PushTokenRepository,
     private val pushSendLogRepository: PushSendLogRepository,
@@ -30,7 +30,7 @@ class KeywordNudgePushService(
     private val zone: ZoneId = ZoneId.of(properties.zone)
 
     @Transactional
-    fun tick(userId: Long) {
+    fun execute(userId: Long) {
         val config = properties.keywordNudge
         if (!properties.enabled || !config.enabled) return
 

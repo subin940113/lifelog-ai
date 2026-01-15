@@ -1,5 +1,7 @@
 package com.example.lifelog.infrastructure.external.oauth
 
+import com.example.lifelog.common.exception.BusinessException
+import com.example.lifelog.common.exception.ErrorCode
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 
@@ -18,10 +20,12 @@ class KakaoOAuthProviderImpl(
                 .header("Authorization", "Bearer $accessToken")
                 .retrieve()
                 .bodyToMono(Map::class.java)
-                .block() ?: throw IllegalArgumentException("Kakao profile empty")
+                .block() ?: throw BusinessException(ErrorCode.BUSINESS_OAUTH_PROVIDER_ERROR, "Kakao profile empty")
 
         val id = (res["id"] ?: "").toString().trim()
-        if (id.isBlank()) throw IllegalArgumentException("Kakao providerUserId missing")
+        if (id.isBlank()) {
+            throw BusinessException(ErrorCode.BUSINESS_OAUTH_PROVIDER_ERROR, "Kakao providerUserId missing")
+        }
 
         // kakao_account.profile.nickname / email 등은 앱 권한 및 설정에 따라 null 가능
         val kakaoAccount = res["kakao_account"] as? Map<*, *>

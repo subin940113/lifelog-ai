@@ -1,7 +1,5 @@
 package com.example.lifelog.infrastructure.persistence.log
 
-import com.example.lifelog.domain.log.LogRepository
-import com.example.lifelog.domain.log.LogSlice
 import com.example.lifelog.domain.log.RawLog
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
@@ -76,7 +74,6 @@ interface JpaLogRepository : JpaRepository<RawLog, Long> {
         @Param("end") end: Instant,
         pageable: Pageable,
     ): List<RawLogSlice>
-
 
     fun existsByUserIdAndCreatedAtBetween(
         userId: Long,

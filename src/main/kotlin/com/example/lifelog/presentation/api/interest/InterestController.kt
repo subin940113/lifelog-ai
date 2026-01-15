@@ -1,7 +1,10 @@
 package com.example.lifelog.presentation.api.interest
 
-import com.example.lifelog.application.interest.InterestResponse
-import com.example.lifelog.application.interest.ManageInterestUseCase
+import com.example.lifelog.application.interest.AddInterestKeywordUseCase
+import com.example.lifelog.application.interest.GetInterestsUseCase
+import com.example.lifelog.application.interest.RemoveInterestKeywordUseCase
+import com.example.lifelog.common.exception.ErrorCode
+import com.example.lifelog.common.exception.ValidationException
 import com.example.lifelog.infrastructure.security.AuthPrincipal
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -19,12 +22,14 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/interests")
 class InterestController(
-    private val manageInterestUseCase: ManageInterestUseCase,
+    private val getInterestsUseCase: GetInterestsUseCase,
+    private val addInterestKeywordUseCase: AddInterestKeywordUseCase,
+    private val removeInterestKeywordUseCase: RemoveInterestKeywordUseCase,
 ) {
     @GetMapping
     fun get(
         @AuthenticationPrincipal principal: AuthPrincipal,
-    ): InterestResponse = manageInterestUseCase.getInterests(principal.userId)
+    ): InterestResponse = getInterestsUseCase.execute(principal.userId)
 
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
@@ -32,8 +37,8 @@ class InterestController(
         @AuthenticationPrincipal principal: AuthPrincipal,
         @Valid @RequestBody request: InterestKeywordRequest,
     ): InterestResponse {
-        val keyword = request.keyword ?: throw IllegalArgumentException("keyword는 필수입니다.")
-        return manageInterestUseCase.addKeyword(principal.userId, keyword)
+        val keyword = request.keyword ?: throw ValidationException(ErrorCode.VALIDATION_REQUIRED, "keyword는 필수입니다.")
+        return addInterestKeywordUseCase.execute(principal.userId, keyword)
     }
 
     // 기존 클라 변경 최소화를 위해 POST /remove 유지
@@ -43,7 +48,7 @@ class InterestController(
         @AuthenticationPrincipal principal: AuthPrincipal,
         @Valid @RequestBody request: InterestKeywordRequest,
     ): InterestResponse {
-        val keyword = request.keyword ?: throw IllegalArgumentException("keyword는 필수입니다.")
-        return manageInterestUseCase.removeKeyword(principal.userId, keyword)
+        val keyword = request.keyword ?: throw ValidationException(ErrorCode.VALIDATION_REQUIRED, "keyword는 필수입니다.")
+        return removeInterestKeywordUseCase.execute(principal.userId, keyword)
     }
 }

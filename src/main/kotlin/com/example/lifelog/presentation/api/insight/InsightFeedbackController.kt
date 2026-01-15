@@ -1,6 +1,7 @@
 package com.example.lifelog.presentation.api.insight
 
-import com.example.lifelog.application.insight.feedback.InsightFeedbackView
+import com.example.lifelog.application.insight.feedback.GetInsightFeedbackUseCase
+import com.example.lifelog.application.insight.feedback.InsightFeedbackResponse
 import com.example.lifelog.application.insight.feedback.SubmitInsightFeedbackRequest
 import com.example.lifelog.application.insight.feedback.SubmitInsightFeedbackUseCase
 import com.example.lifelog.infrastructure.security.AuthPrincipal
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/insights")
 class InsightFeedbackController(
+    private val getInsightFeedbackUseCase: GetInsightFeedbackUseCase,
     private val submitInsightFeedbackUseCase: SubmitInsightFeedbackUseCase,
 ) {
     @PostMapping("/{insightId}/feedback")
@@ -25,17 +27,17 @@ class InsightFeedbackController(
         @AuthenticationPrincipal principal: AuthPrincipal,
         @PathVariable insightId: Long,
         @RequestBody request: SubmitInsightFeedbackRequest,
-    ): InsightFeedbackView {
+    ): InsightFeedbackResponse {
         val userId = principal.userId
-        return submitInsightFeedbackUseCase.submit(userId = userId, insightId = insightId, request = request)
+        return submitInsightFeedbackUseCase.execute(userId = userId, insightId = insightId, request = request)
     }
 
     @GetMapping("/{insightId}/feedback")
     fun get(
         @AuthenticationPrincipal principal: AuthPrincipal,
         @PathVariable insightId: Long,
-    ): InsightFeedbackView? {
+    ): InsightFeedbackResponse? {
         val userId = principal.userId
-        return submitInsightFeedbackUseCase.get(userId, insightId)
+        return getInsightFeedbackUseCase.execute(userId, insightId)
     }
 }

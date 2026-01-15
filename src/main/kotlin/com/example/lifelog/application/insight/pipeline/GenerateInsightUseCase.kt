@@ -11,7 +11,7 @@ import java.time.Clock
 import java.time.Instant
 
 @Service
-class InsightGenerationService(
+class GenerateInsightUseCase(
     private val triggerPolicy: InsightTriggerPolicy,
     private val contextBuilder: InsightContextBuilder,
     private val generator: InsightGeneratorRouter,
@@ -21,7 +21,7 @@ class InsightGenerationService(
     private val clock: Clock = Clock.systemUTC(),
 ) {
     @Transactional
-    fun generateIfNeeded(rawLog: RawLog) {
+    fun execute(rawLog: RawLog) {
         val userId = rawLog.userId
         val content = rawLog.content.trim()
         if (content.isEmpty()) return

@@ -1,6 +1,6 @@
 package com.example.lifelog.infrastructure.scheduler.push
 
-import com.example.lifelog.application.push.PushOrchestratorService
+import com.example.lifelog.application.push.OrchestratePushUseCase
 import com.example.lifelog.domain.push.PushTokenRepository
 import com.example.lifelog.infrastructure.config.PushPolicyProperties
 import org.slf4j.LoggerFactory
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component
 class PushScheduler(
     private val properties: PushPolicyProperties,
     private val pushTokenRepository: PushTokenRepository,
-    private val pushOrchestratorService: PushOrchestratorService,
+    private val orchestratePushUseCase: OrchestratePushUseCase,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -28,7 +28,7 @@ class PushScheduler(
         if (userIds.isEmpty()) return
 
         userIds.forEach { userId ->
-            val result = runCatching { pushOrchestratorService.tickUser(userId) }
+            val result = runCatching { orchestratePushUseCase.execute(userId) }
             result.onFailure { exception -> log.warn("[PUSH] tickUser failed userId={}", userId, exception) }
         }
     }

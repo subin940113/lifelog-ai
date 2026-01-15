@@ -9,33 +9,44 @@ import java.time.Instant
  */
 interface LogRepository {
     fun save(log: RawLog): RawLog
+
     fun findById(id: Long): RawLog?
-    fun findFirstPage(userId: Long, pageable: Pageable): List<RawLog>
+
+    fun findFirstPage(
+        userId: Long,
+        pageable: Pageable,
+    ): List<RawLog>
+
     fun findNextPage(
         userId: Long,
         cursorCreatedAt: Instant,
         cursorId: Long,
         pageable: Pageable,
     ): List<RawLog>
+
     fun countByUserIdAndCreatedAtGreaterThanEqual(
         userId: Long,
         createdAt: Instant,
     ): Long
+
     fun findByUserIdOrderByCreatedAtDesc(
         userId: Long,
         pageable: Pageable,
     ): List<RawLog>
+
     fun findSliceBetween(
         userId: Long,
         start: Instant,
         end: Instant,
         pageable: Pageable,
     ): List<LogSlice>
+
     fun existsByUserIdAndCreatedAtBetween(
         userId: Long,
         start: Instant,
         end: Instant,
     ): Boolean
+
     fun findLatestByUserId(
         userId: Long,
         pageable: Pageable,

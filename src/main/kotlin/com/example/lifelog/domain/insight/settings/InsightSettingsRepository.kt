@@ -5,5 +5,6 @@ package com.example.lifelog.domain.insight.settings
  */
 interface InsightSettingsRepository {
     fun findByUserId(userId: Long): InsightSettings?
+
     fun save(settings: InsightSettings): InsightSettings
 }

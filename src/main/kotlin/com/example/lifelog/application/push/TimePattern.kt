@@ -1,5 +1,7 @@
 package com.example.lifelog.application.push
 
+import com.example.lifelog.common.exception.ErrorCode
+import com.example.lifelog.common.exception.ValidationException
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -20,8 +22,12 @@ class TimePatternAnalyzer(
     private val bucketMinutes: Int,
 ) {
     init {
-        require(bucketMinutes in 5..180) { "bucketMinutes out of range" }
-        require(1440 % bucketMinutes == 0) { "bucketMinutes must divide 1440" }
+        if (bucketMinutes !in 5..180) {
+            throw ValidationException(ErrorCode.VALIDATION_OUT_OF_RANGE, "bucketMinutes out of range: $bucketMinutes")
+        }
+        if (1440 % bucketMinutes != 0) {
+            throw ValidationException(ErrorCode.VALIDATION_INVALID_BUCKET_MINUTES, "bucketMinutes must divide 1440: $bucketMinutes")
+        }
     }
 
     fun detectMostFrequentBucket(logs: List<Pair<Instant, String>>): TimePattern? {

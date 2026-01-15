@@ -1,9 +1,11 @@
 package com.example.lifelog.application.log
 
+import com.example.lifelog.common.exception.ErrorCode
+import com.example.lifelog.common.exception.ValidationException
 import com.example.lifelog.common.pagination.CursorCodec
 import com.example.lifelog.common.pagination.CursorPage
 import com.example.lifelog.common.pagination.CursorPagination
-import com.example.lifelog.common.time.DateTimeFormatters
+import com.example.lifelog.common.time.DateTimeFormatter
 import com.example.lifelog.common.time.TimeZoneConfig
 import com.example.lifelog.domain.log.LogRepository
 import com.example.lifelog.domain.log.RawLog
@@ -20,19 +22,28 @@ class CreateLogUseCase(
     private val eventPublisher: ApplicationEventPublisher,
 ) {
     @Transactional
-    fun execute(userId: Long, content: String): RawLog {
+    fun execute(
+        userId: Long,
+        content: String,
+    ): RawLog {
         val trimmed = content.trim()
-        require(trimmed.isNotEmpty()) { "content is blank" }
+        if (trimmed.isEmpty()) {
+            throw ValidationException(ErrorCode.VALIDATION_BLANK_CONTENT)
+        }
 
-        val log = RawLog(
-            userId = userId,
-            content = trimmed,
-        )
+        val log =
+            RawLog(
+                userId = userId,
+                content = trimmed,
+            )
 
         val saved = logRepository.save(log)
 
         // 트랜잭션 커밋 이후 리스너에서 받도록 이벤트 발행
-        eventPublisher.publishEvent(com.example.lifelog.domain.log.RawLogCreatedEvent(saved))
+        eventPublisher.publishEvent(
+            com.example.lifelog.domain.log
+                .RawLogCreatedEvent(saved),
+        )
 
         return saved
     }
@@ -71,9 +82,10 @@ class ListLogsUseCase(
 
         val zoneId = timeZoneConfig.defaultZoneId
 
-        val items = rows.map { log ->
-            LogListItem.from(log, zoneId)
-        }
+        val items =
+            rows.map { log ->
+                LogListItem.from(log, zoneId)
+            }
 
         return CursorPagination.paginate(
             rows = items,
@@ -84,7 +96,7 @@ class ListLogsUseCase(
 }
 
 /**
- * 로그 목록 아이템 DTO
+ * 로그 목록 아이템 응답
  */
 data class LogListItem(
     val logId: Long,
@@ -106,8 +118,8 @@ data class LogListItem(
                 logId = log.id,
                 createdAt = createdAt,
                 createdAtLabel = createdAt.toString(),
-                dateLabel = DateTimeFormatters.formatDate(createdAt, zoneId),
-                timeLabel = DateTimeFormatters.formatTime(createdAt, zoneId),
+                dateLabel = DateTimeFormatter.formatDate(createdAt, zoneId),
+                timeLabel = DateTimeFormatter.formatTime(createdAt, zoneId),
                 preview = log.preview(),
             )
         }

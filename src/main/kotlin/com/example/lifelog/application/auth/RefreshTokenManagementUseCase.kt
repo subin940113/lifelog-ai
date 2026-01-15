@@ -1,20 +1,22 @@
 package com.example.lifelog.application.auth
 
-import com.example.lifelog.infrastructure.security.TokenHash
+import com.example.lifelog.common.exception.ErrorCode
 import com.example.lifelog.domain.auth.RefreshToken
 import com.example.lifelog.domain.auth.RefreshTokenRepository
+import com.example.lifelog.infrastructure.security.TokenHash
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.security.SecureRandom
 import java.time.Duration
 import java.time.Instant
 import java.util.Base64
+import com.example.lifelog.common.exception.UnauthorizedException as ApiUnauthorizedException
 
 /**
  * 리프레시 토큰 관리 Use Case
  */
 @Service
-class RefreshTokenService(
+class RefreshTokenManagementUseCase(
     private val refreshTokenRepository: RefreshTokenRepository,
 ) {
     private val random = SecureRandom()
@@ -59,11 +61,12 @@ class RefreshTokenService(
         now: Instant = Instant.now(),
     ): ValidRefreshToken {
         val hash = TokenHash.sha256Hex(rawRefreshToken)
-        val rt = refreshTokenRepository.findByTokenHash(hash)
-            ?: throw UnauthorizedException("refresh token not found")
+        val rt =
+            refreshTokenRepository.findByTokenHash(hash)
+                ?: throw ApiUnauthorizedException(ErrorCode.UNAUTHORIZED_REFRESH_TOKEN_NOT_FOUND)
 
-        if (rt.isRevoked()) throw UnauthorizedException("refresh token revoked")
-        if (rt.isExpired(now)) throw UnauthorizedException("refresh token expired")
+        if (rt.isRevoked()) throw ApiUnauthorizedException(ErrorCode.UNAUTHORIZED_REFRESH_TOKEN_REVOKED)
+        if (rt.isExpired(now)) throw ApiUnauthorizedException(ErrorCode.UNAUTHORIZED_REFRESH_TOKEN_EXPIRED)
 
         return ValidRefreshToken(
             userId = rt.userId,
@@ -86,11 +89,12 @@ class RefreshTokenService(
         now: Instant = Instant.now(),
     ): RefreshRotationResult {
         val oldHash = TokenHash.sha256Hex(rawRefreshToken)
-        val old = refreshTokenRepository.findByTokenHash(oldHash)
-            ?: throw UnauthorizedException("refresh token not found")
+        val old =
+            refreshTokenRepository.findByTokenHash(oldHash)
+                ?: throw ApiUnauthorizedException(ErrorCode.UNAUTHORIZED_REFRESH_TOKEN_NOT_FOUND)
 
-        if (old.isRevoked()) throw UnauthorizedException("refresh token revoked")
-        if (old.isExpired(now)) throw UnauthorizedException("refresh token expired")
+        if (old.isRevoked()) throw ApiUnauthorizedException(ErrorCode.UNAUTHORIZED_REFRESH_TOKEN_REVOKED)
+        if (old.isExpired(now)) throw ApiUnauthorizedException(ErrorCode.UNAUTHORIZED_REFRESH_TOKEN_EXPIRED)
 
         val newRaw = generateRawToken()
         val newHash = TokenHash.sha256Hex(newRaw)
@@ -138,7 +142,3 @@ data class RefreshRotationResult(
     val userId: Long,
     val newRefreshToken: String,
 )
-
-class UnauthorizedException(
-    message: String,
-) : RuntimeException(message)

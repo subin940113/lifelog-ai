@@ -9,12 +9,12 @@ import org.springframework.transaction.annotation.Transactional
  */
 @Service
 class RefreshTokenUseCase(
-    private val refreshTokenService: RefreshTokenService,
+    private val refreshTokenManagementUseCase: RefreshTokenManagementUseCase,
     private val jwtProvider: JwtProvider,
 ) {
     @Transactional
-    fun refresh(request: TokenRefreshRequest): TokenRefreshResponse {
-        val rotation = refreshTokenService.rotate(request.refreshToken)
+    fun execute(request: TokenRefreshRequest): TokenRefreshResponse {
+        val rotation = refreshTokenManagementUseCase.rotate(request.refreshToken)
         val newAccess = jwtProvider.createAccessToken(rotation.userId)
         return TokenRefreshResponse(
             accessToken = newAccess,

@@ -1,7 +1,10 @@
 package com.example.lifelog.application.insight.feedback
 
-import com.example.lifelog.domain.insight.InsightRepository
+import com.example.lifelog.common.exception.ErrorCode
+import com.example.lifelog.common.exception.ForbiddenException
+import com.example.lifelog.common.exception.NotFoundException
 import com.example.lifelog.domain.insight.InsightKind
+import com.example.lifelog.domain.insight.InsightRepository
 import com.example.lifelog.domain.insight.feedback.FeedbackReason
 import com.example.lifelog.domain.insight.feedback.FeedbackVote
 import com.example.lifelog.domain.insight.feedback.InsightFeedback
@@ -25,58 +28,52 @@ class SubmitInsightFeedbackUseCase(
     private val profileRepository: InsightPreferenceProfileRepository,
     private val objectMapper: ObjectMapper,
 ) {
-    @Transactional(readOnly = true)
-    fun get(
-        userId: Long,
-        insightId: Long,
-    ): InsightFeedbackView? {
-        val feedback = feedbackRepository.findByUserIdAndInsightId(userId, insightId)
-        return feedback?.let { InsightFeedbackView.from(it) }
-    }
-
     @Transactional
-    fun submit(
+    fun execute(
         userId: Long,
         insightId: Long,
         request: SubmitInsightFeedbackRequest,
-    ): InsightFeedbackView {
-        val insight = insightRepository.findById(insightId)
-            ?: throw IllegalArgumentException("Insight not found")
+    ): InsightFeedbackResponse {
+        val insight =
+            insightRepository.findById(insightId)
+                ?: throw NotFoundException(ErrorCode.NOT_FOUND_INSIGHT, "Insight not found: $insightId")
 
         if (insight.userId != userId) {
-            throw IllegalArgumentException("Forbidden")
+            throw ForbiddenException(ErrorCode.FORBIDDEN, "Access denied to insight: $insightId")
         }
 
-        val normalizedComment = request.comment
-            ?.trim()
-            ?.takeIf { it.isNotBlank() }
-            ?.take(1000)
+        val normalizedComment =
+            request.comment
+                ?.trim()
+                ?.takeIf { it.isNotBlank() }
+                ?.take(1000)
 
         val normalizedScore = request.score?.coerceIn(1, 5)
 
         val existing = feedbackRepository.findByUserIdAndInsightId(userId, insightId)
 
-        val saved = if (existing != null) {
-            existing.update(request.vote, request.reason, normalizedScore, normalizedComment)
-            feedbackRepository.save(existing)
-        } else {
-            feedbackRepository.save(
-                InsightFeedback(
-                    userId = userId,
-                    insightId = insightId,
-                    vote = request.vote,
-                    reason = request.reason,
-                    score = normalizedScore,
-                    comment = normalizedComment,
-                    createdAt = Instant.now(),
-                ),
-            )
-        }
+        val saved =
+            if (existing != null) {
+                existing.update(request.vote, request.reason, normalizedScore, normalizedComment)
+                feedbackRepository.save(existing)
+            } else {
+                feedbackRepository.save(
+                    InsightFeedback(
+                        userId = userId,
+                        insightId = insightId,
+                        vote = request.vote,
+                        reason = request.reason,
+                        score = normalizedScore,
+                        comment = normalizedComment,
+                        createdAt = Instant.now(),
+                    ),
+                )
+            }
 
         // 프로필 업데이트 (개인화 핵심)
         updatePreferenceProfile(userId, insight.kind, request.vote, request.reason)
 
-        return InsightFeedbackView.from(saved)
+        return InsightFeedbackResponse.from(saved)
     }
 
     private fun updatePreferenceProfile(
@@ -85,12 +82,13 @@ class SubmitInsightFeedbackUseCase(
         vote: FeedbackVote,
         reason: FeedbackReason?,
     ) {
-        val profile = profileRepository.findByUserId(userId)
-            ?: InsightPreferenceProfile(
-                userId = userId,
-                kindWeightsJson = defaultWeightsJson(),
-                dislikeStreak = 0,
-            )
+        val profile =
+            profileRepository.findByUserId(userId)
+                ?: InsightPreferenceProfile(
+                    userId = userId,
+                    kindWeightsJson = defaultWeightsJson(),
+                    dislikeStreak = 0,
+                )
 
         val weights = readWeights(profile.kindWeightsJson).toMutableMap()
 
@@ -105,11 +103,12 @@ class SubmitInsightFeedbackUseCase(
         }
 
         // dislike streak (쿨다운/발생 빈도 조절용)
-        profile.dislikeStreak = if (vote == FeedbackVote.DISLIKE) {
-            min(profile.dislikeStreak + 1, 10)
-        } else {
-            max(profile.dislikeStreak - 1, 0)
-        }
+        profile.dislikeStreak =
+            if (vote == FeedbackVote.DISLIKE) {
+                min(profile.dislikeStreak + 1, 10)
+            } else {
+                max(profile.dislikeStreak - 1, 0)
+            }
 
         profile.kindWeightsJson = writeWeights(weights)
         profile.updatedAt = Instant.now()
@@ -163,9 +162,9 @@ data class SubmitInsightFeedbackRequest(
 )
 
 /**
- * 인사이트 피드백 조회 응답 DTO
+ * 인사이트 피드백 응답
  */
-data class InsightFeedbackView(
+data class InsightFeedbackResponse(
     val insightId: Long,
     val vote: FeedbackVote,
     val reason: FeedbackReason?,
@@ -173,8 +172,8 @@ data class InsightFeedbackView(
     val updatedAt: Instant,
 ) {
     companion object {
-        fun from(entity: InsightFeedback): InsightFeedbackView =
-            InsightFeedbackView(
+        fun from(entity: InsightFeedback): InsightFeedbackResponse =
+            InsightFeedbackResponse(
                 insightId = entity.insightId,
                 vote = entity.vote,
                 reason = entity.reason,

@@ -9,9 +9,19 @@ import java.time.Instant
  */
 interface InsightRepository {
     fun save(insight: Insight): Insight
+
     fun findById(id: Long): Insight?
-    fun findLatestByUserId(userId: Long, pageable: Pageable): List<Insight>
-    fun findFirstPage(userId: Long, pageable: Pageable): List<Insight>
+
+    fun findLatestByUserId(
+        userId: Long,
+        pageable: Pageable,
+    ): List<Insight>
+
+    fun findFirstPage(
+        userId: Long,
+        pageable: Pageable,
+    ): List<Insight>
+
     fun findNextPage(
         userId: Long,
         cursorCreatedAt: Instant,

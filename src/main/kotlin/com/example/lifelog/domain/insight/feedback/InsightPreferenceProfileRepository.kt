@@ -5,5 +5,6 @@ package com.example.lifelog.domain.insight.feedback
  */
 interface InsightPreferenceProfileRepository {
     fun findByUserId(userId: Long): InsightPreferenceProfile?
+
     fun save(profile: InsightPreferenceProfile): InsightPreferenceProfile
 }

@@ -16,11 +16,9 @@ class PushTokenRepositoryAdapter(
         token: String,
     ): PushToken? = jpaRepo.findByUserIdAndToken(userId, token)
 
-    override fun findByUserIdAndEnabledTrue(userId: Long): List<PushToken> =
-        jpaRepo.findByUserIdAndEnabledTrue(userId)
+    override fun findByUserIdAndEnabledTrue(userId: Long): List<PushToken> = jpaRepo.findByUserIdAndEnabledTrue(userId)
 
-    override fun findEnabledByUserId(userId: Long): List<PushToken> =
-        jpaRepo.findEnabledByUserId(userId)
+    override fun findEnabledByUserId(userId: Long): List<PushToken> = jpaRepo.findEnabledByUserId(userId)
 
     override fun save(token: PushToken): PushToken = jpaRepo.save(token)
 
@@ -33,8 +31,7 @@ class PushTokenRepositoryAdapter(
 
     override fun findDistinctEnabledUserIds(): List<Long> = jpaRepo.findDistinctEnabledUserIds()
 
-    override fun findAllByUserIdAndEnabledTrue(userId: Long): List<PushToken> =
-        jpaRepo.findAllByUserIdAndEnabledTrue(userId)
+    override fun findAllByUserIdAndEnabledTrue(userId: Long): List<PushToken> = jpaRepo.findAllByUserIdAndEnabledTrue(userId)
 
     override fun deleteByToken(token: String) = jpaRepo.deleteByToken(token)
 }

@@ -19,8 +19,10 @@ class LogRepositoryAdapter(
 
     override fun findById(id: Long): RawLog? = jpaRepository.findById(id).orElse(null)
 
-    override fun findFirstPage(userId: Long, pageable: Pageable): List<RawLog> =
-        jpaRepository.findFirstPage(userId, pageable)
+    override fun findFirstPage(
+        userId: Long,
+        pageable: Pageable,
+    ): List<RawLog> = jpaRepository.findFirstPage(userId, pageable)
 
     override fun findNextPage(
         userId: Long,
@@ -44,10 +46,10 @@ class LogRepositoryAdapter(
         start: Instant,
         end: Instant,
         pageable: Pageable,
-    ): List<LogSlice> {
-        return jpaRepository.findSliceBetweenInternal(userId, start, end, pageable)
+    ): List<LogSlice> =
+        jpaRepository
+            .findSliceBetweenInternal(userId, start, end, pageable)
             .map { LogSlice(it.createdAt, it.content) }
-    }
 
     override fun existsByUserIdAndCreatedAtBetween(
         userId: Long,

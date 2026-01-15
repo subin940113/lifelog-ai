@@ -29,10 +29,11 @@ class LogController(
         @AuthenticationPrincipal principal: AuthPrincipal,
         @Valid @RequestBody request: CreateLogRequest,
     ): CreateLogResponse {
-        val savedLog = createLogUseCase.execute(
-            userId = principal.userId,
-            content = request.content,
-        )
+        val savedLog =
+            createLogUseCase.execute(
+                userId = principal.userId,
+                content = request.content,
+            )
         return CreateLogResponse(logId = savedLog.id)
     }
 

@@ -9,26 +9,26 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 
 /**
- * 푸시 발송 오케스트레이터 서비스
+ * 푸시 발송 오케스트레이터 Use Case
  */
 @Service
-class PushOrchestratorService(
-    private val timePatternMissPushService: TimePatternMissPushService,
-    private val keywordNudgePushService: KeywordNudgePushService,
+class OrchestratePushUseCase(
+    private val sendTimePatternMissPushUseCase: SendTimePatternMissPushUseCase,
+    private val sendKeywordNudgePushUseCase: SendKeywordNudgePushUseCase,
     private val pushSendLogRepository: PushSendLogRepository,
     private val properties: PushPolicyProperties,
 ) {
     private val zone: ZoneId = ZoneId.of(properties.zone)
 
     @Transactional
-    fun tickUser(userId: Long) {
+    fun execute(userId: Long) {
         if (!properties.enabled) return
 
         val today = ZonedDateTime.now(zone).toLocalDate()
 
         // 1) TimePatternMiss
         if (properties.timePatternMiss.enabled) {
-            timePatternMissPushService.tick(userId)
+            sendTimePatternMissPushUseCase.execute(userId)
         }
 
         // 2) 오늘 TimePatternMiss가 이미 발송되었다면 Keyword는 생략(하루 1푸시 전략)
@@ -42,7 +42,7 @@ class PushOrchestratorService(
 
         // 3) KeywordNudge
         if (properties.keywordNudge.enabled) {
-            keywordNudgePushService.tick(userId)
+            sendKeywordNudgePushUseCase.execute(userId)
         }
     }
 }

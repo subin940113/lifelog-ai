@@ -27,9 +27,7 @@ class RawLog(
     /**
      * 로그 내용이 유효한지 검증
      */
-    fun isValid(): Boolean {
-        return content.trim().isNotEmpty()
-    }
+    fun isValid(): Boolean = content.trim().isNotEmpty()
 
     /**
      * 로그 내용의 미리보기 생성

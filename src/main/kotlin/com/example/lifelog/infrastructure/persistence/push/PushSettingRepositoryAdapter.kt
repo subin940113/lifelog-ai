@@ -3,7 +3,6 @@ package com.example.lifelog.infrastructure.persistence.push
 import com.example.lifelog.domain.push.PushSetting
 import com.example.lifelog.domain.push.PushSettingRepository
 import org.springframework.stereotype.Component
-import java.util.Optional
 
 /**
  * PushSettingRepository JPA 어댑터

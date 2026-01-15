@@ -41,9 +41,10 @@ class ListInsightsUseCase(
 
         val zoneId = timeZoneConfig.defaultZoneId
 
-        val items = rows.map { insight ->
-            InsightListItem.from(insight, zoneId)
-        }
+        val items =
+            rows.map { insight ->
+                InsightListItem.from(insight, zoneId)
+            }
 
         return CursorPagination.paginate(
             rows = items,
@@ -52,4 +53,3 @@ class ListInsightsUseCase(
         )
     }
 }
-

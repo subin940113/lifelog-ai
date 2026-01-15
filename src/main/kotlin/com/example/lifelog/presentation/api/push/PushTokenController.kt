@@ -1,6 +1,7 @@
 package com.example.lifelog.presentation.api.push
 
-import com.example.lifelog.application.push.ManagePushTokenUseCase
+import com.example.lifelog.application.push.DeletePushTokenUseCase
+import com.example.lifelog.application.push.UpsertPushTokenUseCase
 import com.example.lifelog.infrastructure.security.AuthPrincipal
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -17,7 +18,8 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/push")
 class PushTokenController(
-    private val managePushTokenUseCase: ManagePushTokenUseCase,
+    private val upsertPushTokenUseCase: UpsertPushTokenUseCase,
+    private val deletePushTokenUseCase: DeletePushTokenUseCase,
 ) {
     @PostMapping("/token")
     fun register(
@@ -28,7 +30,7 @@ class PushTokenController(
         val token = request.token?.trim().orEmpty()
         if (token.isEmpty()) return ResponseEntity.badRequest().build()
 
-        managePushTokenUseCase.upsert(
+        upsertPushTokenUseCase.execute(
             userId = userId,
             token = token,
             platform = request.platform,
@@ -45,7 +47,7 @@ class PushTokenController(
         val trimmedToken = token?.trim().orEmpty()
         if (trimmedToken.isEmpty()) return ResponseEntity.badRequest().build()
 
-        managePushTokenUseCase.deleteToken(userId, trimmedToken)
+        deletePushTokenUseCase.execute(userId, trimmedToken)
         return ResponseEntity.ok(RegisterPushTokenResponse(ok = true))
     }
 }

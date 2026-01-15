@@ -1,7 +1,7 @@
 package com.example.lifelog.application.insight
 
-import com.example.lifelog.application.insight.settings.ManageInsightSettingsUseCase
-import com.example.lifelog.application.interest.ManageInterestUseCase
+import com.example.lifelog.application.insight.settings.GetInsightSettingsUseCase
+import com.example.lifelog.application.interest.GetInterestsUseCase
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -10,13 +10,13 @@ import org.springframework.transaction.annotation.Transactional
  */
 @Service
 class GetInsightGateUseCase(
-    private val manageInsightSettingsUseCase: ManageInsightSettingsUseCase,
-    private val manageInterestUseCase: ManageInterestUseCase,
+    private val getInsightSettingsUseCase: GetInsightSettingsUseCase,
+    private val getInterestsUseCase: GetInterestsUseCase,
 ) {
     @Transactional(readOnly = true)
     fun execute(userId: Long): InsightGateState {
-        val settingsEnabled = manageInsightSettingsUseCase.getOrDefault(userId).enabled
-        val interests = manageInterestUseCase.getInterests(userId)
+        val settingsEnabled = getInsightSettingsUseCase.execute(userId).enabled
+        val interests = getInterestsUseCase.execute(userId)
 
         // 관심사 키워드 정규화
         val keywords =

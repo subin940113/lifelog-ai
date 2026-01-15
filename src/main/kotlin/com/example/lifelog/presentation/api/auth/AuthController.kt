@@ -4,11 +4,6 @@ import com.example.lifelog.application.auth.AuthLoginResult
 import com.example.lifelog.application.auth.LoginUseCase
 import com.example.lifelog.application.auth.LogoutUseCase
 import com.example.lifelog.application.auth.RefreshTokenUseCase
-import com.example.lifelog.application.auth.TokenRefreshRequest
-import com.example.lifelog.application.auth.TokenRefreshResponse
-import com.example.lifelog.presentation.api.auth.GoogleLoginRequest
-import com.example.lifelog.presentation.api.auth.LogoutRequest
-import com.example.lifelog.presentation.api.auth.OAuthAccessTokenLoginRequest
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -42,8 +37,8 @@ class AuthController(
 
     @PostMapping("/refresh")
     fun refresh(
-        @RequestBody request: TokenRefreshRequest,
-    ): ResponseEntity<TokenRefreshResponse> = ResponseEntity.ok(refreshTokenUseCase.refresh(request))
+        @RequestBody request: com.example.lifelog.application.auth.TokenRefreshRequest,
+    ): ResponseEntity<com.example.lifelog.application.auth.TokenRefreshResponse> = ResponseEntity.ok(refreshTokenUseCase.execute(request))
 
     @PostMapping("/logout")
     fun logout(
