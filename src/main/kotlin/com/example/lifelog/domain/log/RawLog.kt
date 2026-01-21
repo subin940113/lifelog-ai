@@ -25,11 +25,6 @@ class RawLog(
     val createdAt: Instant = Instant.now(),
 ) {
     /**
-     * 로그 내용이 유효한지 검증
-     */
-    fun isValid(): Boolean = content.trim().isNotEmpty()
-
-    /**
      * 로그 내용의 미리보기 생성
      */
     fun preview(maxLength: Int = 140): String {

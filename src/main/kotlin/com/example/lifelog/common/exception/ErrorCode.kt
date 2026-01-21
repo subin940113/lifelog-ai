@@ -30,6 +30,7 @@ enum class ErrorCode(
     NOT_FOUND_USER("NOTFOUND_001", "사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     NOT_FOUND_INSIGHT("NOTFOUND_002", "인사이트를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     NOT_FOUND_RESOURCE("NOTFOUND_003", "리소스를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    NOT_FOUND_WATER_DROP("NOTFOUND_004", "물방울을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
 
     // 비즈니스 로직 위반 (400, 409)
     BUSINESS_MAX_INTERESTS_EXCEEDED("BIZ_001", "관심사는 최대 5개까지 등록할 수 있습니다.", HttpStatus.BAD_REQUEST),

@@ -29,11 +29,6 @@ interface LogRepository {
         createdAt: Instant,
     ): Long
 
-    fun findByUserIdOrderByCreatedAtDesc(
-        userId: Long,
-        pageable: Pageable,
-    ): List<RawLog>
-
     fun findSliceBetween(
         userId: Long,
         start: Instant,
@@ -51,6 +46,8 @@ interface LogRepository {
         userId: Long,
         pageable: Pageable,
     ): List<RawLog>
+
+    fun countByUserId(userId: Long): Long
 }
 
 /**

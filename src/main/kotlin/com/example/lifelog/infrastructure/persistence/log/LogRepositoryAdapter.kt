@@ -36,11 +36,6 @@ class LogRepositoryAdapter(
         createdAt: Instant,
     ): Long = jpaRepository.countByUserIdAndCreatedAtGreaterThanEqual(userId, createdAt)
 
-    override fun findByUserIdOrderByCreatedAtDesc(
-        userId: Long,
-        pageable: Pageable,
-    ): List<RawLog> = jpaRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
-
     override fun findSliceBetween(
         userId: Long,
         start: Instant,
@@ -60,5 +55,7 @@ class LogRepositoryAdapter(
     override fun findLatestByUserId(
         userId: Long,
         pageable: Pageable,
-    ): List<RawLog> = jpaRepository.findLatestByUserId(userId, pageable)
+    ): List<RawLog> = jpaRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+
+    override fun countByUserId(userId: Long): Long = jpaRepository.countByUserId(userId)
 }

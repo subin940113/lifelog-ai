@@ -1,4 +1,4 @@
-package com.example.lifelog.application.push
+package com.example.lifelog.infrastructure.analyzer
 
 import com.example.lifelog.common.exception.ErrorCode
 import com.example.lifelog.common.exception.ValidationException

@@ -83,14 +83,12 @@ interface JpaLogRepository : JpaRepository<RawLog, Long> {
 
     @Query(
         """
-            select r
-            from RawLog r
-            where r.userId = :userId
-            order by r.createdAt desc, r.id desc
+        select count(r.id)
+        from RawLog r
+        where r.userId = :userId
         """,
     )
-    fun findLatestByUserId(
+    fun countByUserId(
         @Param("userId") userId: Long,
-        pageable: Pageable,
-    ): List<RawLog>
+    ): Long
 }

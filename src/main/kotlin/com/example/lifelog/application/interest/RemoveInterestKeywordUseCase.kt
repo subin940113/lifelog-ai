@@ -1,5 +1,6 @@
 package com.example.lifelog.application.interest
 
+import com.example.lifelog.application.signal.FreezeKeywordSignalStateUseCase
 import com.example.lifelog.domain.interest.InterestRepository
 import com.example.lifelog.presentation.api.interest.InterestResponse
 import org.springframework.stereotype.Service
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional
 class RemoveInterestKeywordUseCase(
     private val interestRepository: InterestRepository,
     private val getInterestsUseCase: GetInterestsUseCase,
+    private val freezeKeywordSignalStateUseCase: FreezeKeywordSignalStateUseCase,
 ) {
     @Transactional
     fun execute(
@@ -27,6 +29,7 @@ class RemoveInterestKeywordUseCase(
         val interestKeyword = interestRepository.findByUserIdAndKeywordKey(userId, keywordKey)
         if (interestKeyword != null) {
             interestRepository.delete(interestKeyword)
+            freezeKeywordSignalStateUseCase.execute(userId, keywordKey)
         }
 
         return getInterestsUseCase.execute(userId)

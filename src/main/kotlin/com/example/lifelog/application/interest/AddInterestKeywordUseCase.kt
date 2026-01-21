@@ -1,5 +1,6 @@
 package com.example.lifelog.application.interest
 
+import com.example.lifelog.application.signal.ReviveKeywordSignalStateUseCase
 import com.example.lifelog.common.exception.BusinessException
 import com.example.lifelog.common.exception.ErrorCode
 import com.example.lifelog.common.exception.ValidationException
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional
 class AddInterestKeywordUseCase(
     private val interestRepository: InterestRepository,
     private val getInterestsUseCase: GetInterestsUseCase,
+    private val reviveKeywordSignalStateUseCase: ReviveKeywordSignalStateUseCase,
 ) {
     companion object {
         private const val MAX_KEYWORDS = 5
@@ -50,6 +52,8 @@ class AddInterestKeywordUseCase(
                 keywordKey = key,
             ),
         )
+
+        reviveKeywordSignalStateUseCase.execute(userId, key)
 
         return getInterestsUseCase.execute(userId)
     }

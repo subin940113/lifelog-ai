@@ -44,14 +44,11 @@ class GetHomeUseCase(
         val recentLogs = loadRecentLogs(userId, safeLimitLogs, today)
         val lastTimeLabel = recentLogs.firstOrNull()?.timeLabel ?: "—"
 
-        val headline =
-            when {
-                signalCount <= 1 -> "아직 해석할 신호가 충분하지 않아요"
-                else -> "새로운 패턴 후보가 감지됐어요"
-            }
+        // 앱에서 설정
+        val headline = ""
 
         val topInsight =
-            TopInsightResponse.create(
+            TopInsightResponse.from(
                 date = today.format(dateFmt),
                 headline = headline,
                 signalCount = signalCount,
@@ -108,7 +105,7 @@ data class TopInsightResponse(
     val lastTimeLabel: String,
 ) {
     companion object {
-        fun create(
+        fun from(
             date: String,
             headline: String,
             signalCount: Int,

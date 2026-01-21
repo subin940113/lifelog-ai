@@ -1,4 +1,4 @@
-package com.example.lifelog.application.push
+package com.example.lifelog.infrastructure.analyzer
 
 import java.time.Instant
 import java.time.ZoneId

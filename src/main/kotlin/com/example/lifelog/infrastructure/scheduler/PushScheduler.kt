@@ -1,4 +1,4 @@
-package com.example.lifelog.infrastructure.scheduler.push
+package com.example.lifelog.infrastructure.scheduler
 
 import com.example.lifelog.application.push.OrchestratePushUseCase
 import com.example.lifelog.domain.push.PushTokenRepository

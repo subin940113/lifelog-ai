@@ -1,4 +1,4 @@
-package com.example.lifelog.application.push
+package com.example.lifelog.domain.push
 
 /**
  * 푸시 인텐트 데이터 키 상수
