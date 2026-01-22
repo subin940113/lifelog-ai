@@ -178,18 +178,60 @@ FCM_SERVICE_ACCOUNT_PATH=classpath:fcm/service-account.json
 #### 소셜 로그인
 ```http
 POST /api/auth/oauth/google
+Content-Type: application/json
+
+{
+  "idToken": "google_id_token"
+}
+```
+
+**응답:**
+```json
+{
+  "accessToken": "jwt_access_token",
+  "refreshToken": "refresh_token",
+  "displayName": "사용자 이름",
+  "isNewUser": false
+}
+```
+
+```http
 POST /api/auth/oauth/kakao
 POST /api/auth/oauth/naver
+Content-Type: application/json
+
+{
+  "accessToken": "oauth_access_token"
+}
 ```
 
 #### 토큰 갱신
 ```http
 POST /api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "refresh_token"
+}
+```
+
+**응답:**
+```json
+{
+  "accessToken": "new_jwt_access_token",
+  "refreshToken": "new_refresh_token"
+}
 ```
 
 #### 로그아웃
 ```http
 POST /api/auth/logout
+Content-Type: application/json
+
+{
+  "refreshToken": "refresh_token",
+  "allDevices": false
+}
 ```
 
 ### 로그
@@ -205,10 +247,35 @@ Authorization: Bearer {token}
 }
 ```
 
+**응답:**
+```json
+{
+  "logId": 123
+}
+```
+
 #### 로그 목록 조회
 ```http
 GET /api/logs?limit=50&cursor={cursor}
 Authorization: Bearer {token}
+```
+
+**응답:**
+```json
+{
+  "items": [
+    {
+      "logId": 123,
+      "createdAt": "2026-01-15T10:30:00Z",
+      "createdAtLabel": "2026-01-15T10:30:00Z",
+      "dateLabel": "2026.01.15",
+      "timeLabel": "19:30",
+      "preview": "오늘 점심에 파스타를 먹었다"
+    }
+  ],
+  "nextCursor": "encoded_cursor_string",
+  "hasNext": true
+}
 ```
 
 ### 인사이트
@@ -219,22 +286,81 @@ GET /api/insights?limit=20&cursor={cursor}
 Authorization: Bearer {token}
 ```
 
-#### 인사이트 피드백
+**응답:**
+```json
+{
+  "items": [
+    {
+      "id": 456,
+      "kind": "PATTERN",
+      "title": "인사이트 제목",
+      "body": "인사이트 본문",
+      "evidence": "증거",
+      "keyword": "관련 키워드",
+      "createdAt": "2026-01-15T10:30:00Z",
+      "createdAtLabel": "2026-01-15T10:30:00Z",
+      "dateLabel": "2026.01.15",
+      "timeLabel": "19:30"
+    }
+  ],
+  "nextCursor": "encoded_cursor_string",
+  "hasNext": true
+}
+```
+
+#### 인사이트 피드백 제출
 ```http
 POST /api/insights/{insightId}/feedback
 Content-Type: application/json
 Authorization: Bearer {token}
 
 {
-  "liked": true
+  "vote": "LIKE",
+  "reason": "RELEVANT",
+  "score": 5,
+  "comment": "유용한 인사이트입니다"
 }
 ```
 
-#### 인사이트 설정 조회/수정
+**응답:**
+```json
+{
+  "insightId": 456,
+  "vote": "LIKE",
+  "reason": "RELEVANT",
+  "comment": "유용한 인사이트입니다",
+  "updatedAt": "2026-01-15T10:30:00Z"
+}
+```
+
+#### 인사이트 피드백 조회
+```http
+GET /api/insights/{insightId}/feedback
+Authorization: Bearer {token}
+```
+
+#### 인사이트 설정 조회
 ```http
 GET /api/insights/settings
-PUT /api/insights/settings
 Authorization: Bearer {token}
+```
+
+**응답:**
+```json
+{
+  "enabled": true
+}
+```
+
+#### 인사이트 설정 수정
+```http
+POST /api/insights/settings
+Content-Type: application/json
+Authorization: Bearer {token}
+
+{
+  "enabled": true
+}
 ```
 
 ### 관심사
@@ -245,6 +371,13 @@ GET /api/interests
 Authorization: Bearer {token}
 ```
 
+**응답:**
+```json
+{
+  "keywords": ["운동", "독서", "요리"]
+}
+```
+
 #### 관심사 키워드 추가
 ```http
 POST /api/interests
@@ -253,6 +386,13 @@ Authorization: Bearer {token}
 
 {
   "keyword": "운동"
+}
+```
+
+**응답:**
+```json
+{
+  "keywords": ["운동", "독서", "요리", "운동"]
 }
 ```
 
@@ -275,12 +415,51 @@ GET /api/home?period=day&limitLogs=3&limitInsights=2
 Authorization: Bearer {token}
 ```
 
+**응답:**
+```json
+{
+  "topInsight": {
+    "date": "2026-01-15",
+    "headline": "인사이트 제목",
+    "signalCount": 5,
+    "axes": [],
+    "lastTimeLabel": "19:30"
+  },
+  "insights": [
+    {
+      "id": 456,
+      "kind": "PATTERN",
+      "title": "인사이트 제목",
+      "body": "인사이트 본문",
+      "evidence": "증거"
+    }
+  ],
+  "recentLogs": [
+    {
+      "logId": 123,
+      "timeLabel": "19:30",
+      "preview": "오늘 점심에 파스타를 먹었다"
+    }
+  ]
+}
+```
+
 ### 사용자
 
 #### 내 정보 조회
 ```http
 GET /api/users/me
 Authorization: Bearer {token}
+```
+
+**응답:**
+```json
+{
+  "id": 1,
+  "displayName": "사용자 이름",
+  "createdAt": "2026-01-01T00:00:00Z",
+  "lastLoginAt": "2026-01-15T10:30:00Z"
+}
 ```
 
 #### 내 정보 수정
@@ -290,29 +469,97 @@ Content-Type: application/json
 Authorization: Bearer {token}
 
 {
-  "displayName": "사용자 이름"
+  "displayName": "새로운 이름"
 }
 ```
 
-### 푸시 설정
+#### 회원 탈퇴
+```http
+DELETE /api/users/me
+Authorization: Bearer {token}
+```
+
+### 푸시
 
 #### 푸시 토큰 등록/수정
 ```http
-POST /api/push/tokens
+POST /api/push/token
 Content-Type: application/json
 Authorization: Bearer {token}
 
 {
   "token": "fcm_device_token",
-  "deviceId": "device_unique_id"
+  "platform": "android"
 }
 ```
 
-#### 푸시 설정 조회/수정
+**응답:**
+```json
+{
+  "ok": true
+}
+```
+
+#### 푸시 토큰 삭제
+```http
+DELETE /api/push/token?token={fcm_token}
+Authorization: Bearer {token}
+```
+
+#### 푸시 설정 조회
 ```http
 GET /api/push/settings
-PUT /api/push/settings
 Authorization: Bearer {token}
+```
+
+**응답:**
+```json
+{
+  "enabled": true
+}
+```
+
+#### 푸시 설정 수정
+```http
+PUT /api/push/settings
+Content-Type: application/json
+Authorization: Bearer {token}
+
+{
+  "enabled": true
+}
+```
+
+### 시그널
+
+#### 시그널 오브젝트 조회
+```http
+GET /api/signal/objects
+Authorization: Bearer {token}
+```
+
+**응답:**
+```json
+{
+  "serverTime": "2026-01-15T10:30:00Z",
+  "totalCandyCount": 100,
+  "activeKeywords": [
+    {
+      "keywordKey": "운동",
+      "insightText": "인사이트 텍스트",
+      "candyCount": 50,
+      "updatedAt": "2026-01-15T10:30:00Z"
+    }
+  ],
+  "waterDrops": [
+    {
+      "keywordKey": "삭제된키워드",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "updatedAt": "2026-01-10T00:00:00Z",
+      "snapshotText": "스냅샷 텍스트"
+    }
+  ]
+}
 ```
 
 ## 아키텍처
