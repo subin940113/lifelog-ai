@@ -6,38 +6,88 @@ spring:
     name: lifelog
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/lifelog
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
 
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     properties:
       hibernate:
         format_sql: true
 
-  batch:
-    jdbc:
-      initialize-schema: always
-
 logging:
   level:
-    org.hibernate.SQL: debug
+    org.hibernate.SQL: info
 
 lifelog:
-  structurer: openai
+  time:
+    default-zone: Asia/Seoul
+
+  insight:
+    generator: openai # heuristic | openai
+    candidateWindowSize: 80
+    maxSelectedLogs: 18
+    minChars: 10
+    cooldownSeconds: 3600
+    dailyLimit: 5
+    keywordMatchRequired: true
+    llmEnabled: true
+    prompt:
+      systemPath: /prompts/insight_system.txt
+      userPath: /prompts/insight_user.txt
+      schemaPath: /schemas/insight-schema.json
+
+  push:
+    policy:
+      enabled: true
+      zone: Asia/Seoul
+
+      # 스케줄러 (몇 분마다 전체 유저를 스캔할지)
+      scan-interval-minutes: 10
+
+      time-pattern-miss:
+        enabled: true
+        lookback-days: 14
+        min-active-days: 5
+        bucket-minutes: 60
+        trigger-delay-minutes: 30
+        max-per-day: 1
+
+      keyword-nudge:
+        enabled: true
+        cooldown-days: 2
+        max-per-day: 1
+        lookback-days: 21
+        bucket-minutes: 30
+        min-occurrences: 3
+        trigger-delay-minutes: 20
+
+      message:
+        time-pattern-title: "오늘은 어땠어?"
+        time-pattern-body: "평소 이 시간쯤 기록이 있었는데 오늘은 아직 없네. 한 줄만 남겨볼래?"
+        keyword-title: "기록 한 줄 어때?"
+        keyword-body-template: "\"%s\" 오늘은 어땠어?"
+
+    fcm:
+      enabled: true
+      serviceAccountPath: ${FCM_SERVICE_ACCOUNT_PATH}
+
+  encryption:
+    key: ${LOG_ENCRYPTION_KEY}
 
 openai:
   base-url: https://api.openai.com/v1
   model: gpt-4o-mini
-  api-key: ${OPENAI_API_KEY:}
+  api-key: ${OPENAI_API_KEY}
 
 oauth:
   google:
     client-ids:
-      - ${GOOGLE_CLIENT_ID_IOS}
+      - ${GOOLE_CLIENT_ID_IOS}
+      - ${GOOGLE_CLIENT_ID_AOS}
 
 jwt:
   secret: ${JWT_SECRET}
