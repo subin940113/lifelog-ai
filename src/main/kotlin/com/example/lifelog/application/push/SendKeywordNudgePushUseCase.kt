@@ -11,6 +11,7 @@ import com.example.lifelog.domain.push.PushTokenRepository
 import com.example.lifelog.infrastructure.analyzer.KeywordTimePatternAnalyzer
 import com.example.lifelog.infrastructure.config.PushPolicyProperties
 import com.example.lifelog.infrastructure.external.fcm.FcmClient
+import com.example.lifelog.infrastructure.security.LogEncryption
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -29,6 +30,7 @@ class SendKeywordNudgePushUseCase(
     private val logRepository: LogRepository,
     private val fcmClient: FcmClient,
     private val properties: PushPolicyProperties,
+    private val logEncryption: LogEncryption,
 ) {
     private val zone: ZoneId = ZoneId.of(properties.zone)
 
@@ -78,11 +80,17 @@ class SendKeywordNudgePushUseCase(
         val logSlice = logRepository.findSliceBetween(userId, start, end, PageRequest.of(0, 400))
         if (logSlice.isEmpty()) return
 
+        // 로그 내용 복호화
+        val decryptedLogSlice =
+            logSlice.map { slice ->
+                slice.copy(content = logEncryption.decrypt(slice.content))
+            }
+
         val analyzer = KeywordTimePatternAnalyzer(zone, config.bucketMinutes)
 
         val pattern =
             analyzer.detectMostFrequentBucket(
-                rows = logSlice.map { it.createdAt to it.content },
+                rows = decryptedLogSlice.map { it.createdAt to it.content },
                 keyword = candidateKeyword,
             ) ?: return
 
@@ -100,7 +108,11 @@ class SendKeywordNudgePushUseCase(
         val todayStart = now.toLocalDate().atStartOfDay(zone).toInstant()
         val tomorrowStart = todayStart.plus(1, ChronoUnit.DAYS)
         val todaySlice = logRepository.findSliceBetween(userId, todayStart, tomorrowStart, PageRequest.of(0, 200))
-        if (todaySlice.any { it.content.contains(candidateKeyword, ignoreCase = true) }) return
+        val decryptedTodaySlice =
+            todaySlice.map { slice ->
+                slice.copy(content = logEncryption.decrypt(slice.content))
+            }
+        if (decryptedTodaySlice.any { it.content.contains(candidateKeyword, ignoreCase = true) }) return
 
         // (6) 디바이스(토큰)
         val tokens = pushTokenRepository.findByUserIdAndEnabledTrue(userId)

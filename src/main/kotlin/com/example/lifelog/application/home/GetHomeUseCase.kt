@@ -3,6 +3,8 @@ package com.example.lifelog.application.home
 import com.example.lifelog.common.time.TimeZoneConfig
 import com.example.lifelog.domain.insight.InsightRepository
 import com.example.lifelog.domain.log.LogRepository
+import com.example.lifelog.domain.log.RawLog
+import com.example.lifelog.infrastructure.security.LogEncryption
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
@@ -20,6 +22,7 @@ class GetHomeUseCase(
     private val logRepository: LogRepository,
     private val insightRepository: InsightRepository,
     private val timeZoneConfig: TimeZoneConfig,
+    private val logEncryption: LogEncryption,
 ) {
     private val zoneId = timeZoneConfig.defaultZoneId
     private val dateFmt: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
@@ -84,7 +87,19 @@ class GetHomeUseCase(
         val pageable = PageRequest.of(0, limit)
         val logs = logRepository.findLatestByUserId(userId, pageable)
 
-        return logs.map { RecentLogResponse.from(it, zoneId, today, timeFmt, mdFmt) }
+        return logs.map { log ->
+            // 로그 내용 복호화
+            val decryptedContent = logEncryption.decrypt(log.content)
+            // 복호화된 내용으로 임시 RawLog 생성 (preview 메서드 사용을 위해)
+            val decryptedLog =
+                RawLog(
+                    id = log.id,
+                    userId = log.userId,
+                    content = decryptedContent,
+                    createdAt = log.createdAt,
+                )
+            RecentLogResponse.from(decryptedLog, zoneId, today, timeFmt, mdFmt)
+        }
     }
 }
 

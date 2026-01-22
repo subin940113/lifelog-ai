@@ -7,6 +7,7 @@ import com.example.lifelog.common.time.DateTimeFormatter
 import com.example.lifelog.common.time.TimeZoneConfig
 import com.example.lifelog.domain.log.LogRepository
 import com.example.lifelog.domain.log.RawLog
+import com.example.lifelog.infrastructure.security.LogEncryption
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional
 class ListLogsUseCase(
     private val logRepository: LogRepository,
     private val timeZoneConfig: TimeZoneConfig,
+    private val logEncryption: LogEncryption,
 ) {
     @Transactional(readOnly = true)
     fun execute(
@@ -45,7 +47,17 @@ class ListLogsUseCase(
 
         val items =
             rows.map { log ->
-                LogListItem.from(log, zoneId)
+                // 로그 내용 복호화
+                val decryptedContent = logEncryption.decrypt(log.content)
+                // 복호화된 내용으로 임시 RawLog 생성 (preview 메서드 사용을 위해)
+                val decryptedLog =
+                    RawLog(
+                        id = log.id,
+                        userId = log.userId,
+                        content = decryptedContent,
+                        createdAt = log.createdAt,
+                    )
+                LogListItem.from(decryptedLog, zoneId)
             }
 
         return CursorPagination.paginate(
@@ -81,7 +93,7 @@ data class LogListItem(
                 createdAtLabel = createdAt.toString(),
                 dateLabel = DateTimeFormatter.formatDate(createdAt, zoneId),
                 timeLabel = DateTimeFormatter.formatTime(createdAt, zoneId),
-                preview = log.preview(),
+                preview = log.preview(), // 이미 복호화된 내용 사용
             )
         }
     }

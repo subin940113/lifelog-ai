@@ -11,6 +11,7 @@ import com.example.lifelog.domain.push.PushTokenRepository
 import com.example.lifelog.infrastructure.analyzer.TimePatternAnalyzer
 import com.example.lifelog.infrastructure.config.PushPolicyProperties
 import com.example.lifelog.infrastructure.external.fcm.FcmClient
+import com.example.lifelog.infrastructure.security.LogEncryption
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
@@ -30,6 +31,7 @@ class SendTimePatternMissPushUseCase(
     private val logRepository: LogRepository,
     private val fcmClient: FcmClient,
     private val properties: PushPolicyProperties,
+    private val logEncryption: LogEncryption,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val zone: ZoneId = ZoneId.of(properties.zone)
@@ -66,9 +68,15 @@ class SendTimePatternMissPushUseCase(
         val logSlice = logRepository.findSliceBetween(userId, start, end, PageRequest.of(0, 400))
         if (logSlice.isEmpty()) return
 
+        // 로그 내용 복호화
+        val decryptedLogSlice =
+            logSlice.map { slice ->
+                slice.copy(content = logEncryption.decrypt(slice.content))
+            }
+
         val analyzer = TimePatternAnalyzer(zone, config.bucketMinutes)
         val pattern =
-            analyzer.detectMostFrequentBucket(logSlice.map { it.createdAt to it.content })
+            analyzer.detectMostFrequentBucket(decryptedLogSlice.map { it.createdAt to it.content })
                 ?: return
 
         if (pattern.activeDays < config.minActiveDays) return

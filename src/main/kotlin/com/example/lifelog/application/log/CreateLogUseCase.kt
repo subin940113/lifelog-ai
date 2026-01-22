@@ -5,6 +5,7 @@ import com.example.lifelog.common.exception.ValidationException
 import com.example.lifelog.domain.log.LogRepository
 import com.example.lifelog.domain.log.RawLog
 import com.example.lifelog.domain.log.RawLogCreatedEvent
+import com.example.lifelog.infrastructure.security.LogEncryption
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional
 class CreateLogUseCase(
     private val logRepository: LogRepository,
     private val eventPublisher: ApplicationEventPublisher,
+    private val logEncryption: LogEncryption,
 ) {
     @Transactional
     fun execute(
@@ -27,10 +29,13 @@ class CreateLogUseCase(
             throw ValidationException(ErrorCode.VALIDATION_BLANK_CONTENT)
         }
 
+        // 로그 내용 암호화
+        val encryptedContent = logEncryption.encrypt(trimmed)
+
         val log =
             RawLog(
                 userId = userId,
-                content = trimmed,
+                content = encryptedContent,
             )
 
         val saved = logRepository.save(log)

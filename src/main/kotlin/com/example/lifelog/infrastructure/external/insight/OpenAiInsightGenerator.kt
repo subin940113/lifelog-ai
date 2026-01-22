@@ -6,6 +6,7 @@ import com.example.lifelog.domain.insight.InsightContext
 import com.example.lifelog.domain.insight.RecentInsight
 import com.example.lifelog.infrastructure.config.InsightPolicyProperties
 import com.example.lifelog.infrastructure.external.openai.OpenAiClient
+import com.example.lifelog.infrastructure.security.LogEncryption
 import org.springframework.stereotype.Component
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -22,14 +23,17 @@ class OpenAiInsightGenerator(
     private val selector: InsightLogSelector,
     private val perspectiveSelector: InsightPerspectiveSelector,
     private val properties: InsightPolicyProperties,
+    private val logEncryption: LogEncryption,
 ) : InsightGenerator {
     override fun generate(ctx: InsightContext): GeneratedInsight? {
         if (!properties.llmEnabled) return null
 
         val candidates =
             ctx.logs.map { log ->
+                // 로그 내용 복호화 후 sanitize
+                val decryptedContent = logEncryption.decrypt(log.content)
                 InsightLogSelector.LogCandidate(
-                    content = sanitizer.sanitize(log.content),
+                    content = sanitizer.sanitize(decryptedContent),
                     createdAt = log.createdAt,
                 )
             }

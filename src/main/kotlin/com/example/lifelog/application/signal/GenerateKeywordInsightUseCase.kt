@@ -5,6 +5,7 @@ import com.example.lifelog.domain.log.LogRepository
 import com.example.lifelog.domain.signal.KeywordSignalStateRepository
 import com.example.lifelog.infrastructure.external.openai.OpenAiClient
 import com.example.lifelog.infrastructure.external.signal.KeywordInsightPromptLoader
+import com.example.lifelog.infrastructure.security.LogEncryption
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -17,6 +18,7 @@ class GenerateKeywordInsightUseCase(
     private val openAiClient: OpenAiClient,
     private val promptLoader: KeywordInsightPromptLoader,
     private val writer: KeywordInsightWriter,
+    private val logEncryption: LogEncryption,
 ) {
     private val thresholdDelta: Long = 10 // candy가 checkpoint 대비 이만큼 증가하면 재생성
     private val recentLogsLimit: Int = 200 // “최근 최대한 많이”의 현실적 상한
@@ -40,8 +42,10 @@ class GenerateKeywordInsightUseCase(
             val recentLogs =
                 recentCandidates
                     .asSequence()
-                    .filter { it.content.contains(keywordKey, ignoreCase = true) }
-                    .map { it.content }
+                    .map { log ->
+                        // 로그 내용 복호화
+                        logEncryption.decrypt(log.content)
+                    }.filter { it.contains(keywordKey, ignoreCase = true) }
                     .toList()
 
             // Top liked insights: 반드시 (userId, keyword) 범위로 제한된 LIKE 인사이트만
