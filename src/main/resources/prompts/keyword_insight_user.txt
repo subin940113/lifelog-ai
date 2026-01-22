@@ -1,0 +1,11 @@
+[키워드]
+{{keywordKey}}
+
+[이전 인사이트]
+{{previousInsight}}
+
+[참고할 인사이트(점수 높은 순)]
+{{topInsights}}
+
+[최근 사용자 기록]
+{{recentLogs}}

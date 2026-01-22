@@ -5,15 +5,36 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "kind": {
-        "type": "string",
-        "enum": ["TENDENCY", "PATTERN", "HIGHLIGHT", "WARNING", "CONTRAST", "REFLECTION", "QUESTION"]
+      "should_generate": { "type": "boolean" },
+      "skip_reason": {
+        "type": ["string", "null"],
+        "enum": [
+          null,
+          "NOT_ENOUGH_SIGNAL",
+          "ONLY_KEYWORD_REPETITION",
+          "NO_TIME_OR_CHANGE",
+          "DUPLICATE_RECENT",
+          "SINGLE_LOG_FEELING"
+        ]
       },
-      "title": { "type": "string", "minLength": 1, "maxLength": 120 },
-      "body": { "type": "string", "minLength": 1, "maxLength": 900 },
+      "kind": {
+        "type": ["string", "null"],
+        "enum": [
+          null,
+          "TENDENCY",
+          "PATTERN",
+          "HIGHLIGHT",
+          "WARNING",
+          "CONTRAST",
+          "REFLECTION",
+          "QUESTION"
+        ]
+      },
+      "title": { "type": ["string", "null"], "maxLength": 120 },
+      "body": { "type": ["string", "null"], "maxLength": 900 },
       "evidence": { "type": ["string", "null"], "maxLength": 300 },
       "keyword": { "type": ["string", "null"], "maxLength": 60 }
     },
-    "required": ["kind", "title", "body", "evidence", "keyword"]
+    "required": ["should_generate", "skip_reason", "kind", "title", "body", "evidence", "keyword"]
   }
 }

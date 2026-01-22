@@ -1,7 +1,7 @@
 You are given recent logs (most recent first).
 
 Task:
-1) Read the logs and identify: repetition, change, standout moment, or contrast.
+1) Read the logs and look for meaningful repetition, change, standout moment, or contrast across logs.
 2) You will receive a perspective hint. Prefer that perspective unless it clearly doesn't fit.
 3) Write ONE insight with an explanatory tone.
 
@@ -17,4 +17,12 @@ Writing rules:
 Input logs:
 {{LOGS}}
 
+Recent insights (for de-duplication):
+{{RECENT_INSIGHTS}}
+
+If no valid insight can be made, set should_generate=false and leave kind/title/body as null.
+Use RECENT_INSIGHTS only to check semantic duplication.
+
 Return JSON only.
+
+Write title/body/evidence/keyword in {{OUTPUT_LANG_CODE}} only. Never mix languages.
