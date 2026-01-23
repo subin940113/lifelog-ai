@@ -11,33 +11,33 @@ import java.time.LocalDate
  */
 @Component
 class PushSendLogRepositoryAdapter(
-    private val jpaRepo: JpaPushSendLogRepository,
+    private val jpaRepository: JpaPushSendLogRepository,
 ) : PushSendLogRepository {
     override fun existsByUserIdAndTypeAndLocalDate(
         userId: Long,
         type: PushSendType,
         localDate: LocalDate,
-    ): Boolean = jpaRepo.existsByUserIdAndTypeAndLocalDate(userId, type, localDate)
+    ): Boolean = jpaRepository.existsByUserIdAndTypeAndLocalDate(userId, type, localDate)
 
     override fun countByUserIdAndTypeAndLocalDate(
         userId: Long,
         type: PushSendType,
         localDate: LocalDate,
-    ): Long = jpaRepo.countByUserIdAndTypeAndLocalDate(userId, type, localDate)
+    ): Long = jpaRepository.countByUserIdAndTypeAndLocalDate(userId, type, localDate)
 
     override fun existsByUserIdAndTypeAndLocalDateAndKeyword(
         userId: Long,
         type: PushSendType,
         localDate: LocalDate,
         keyword: String,
-    ): Boolean = jpaRepo.existsByUserIdAndTypeAndLocalDateAndKeyword(userId, type, localDate, keyword)
+    ): Boolean = jpaRepository.existsByUserIdAndTypeAndLocalDateAndKeyword(userId, type, localDate, keyword)
 
     override fun existsByUserIdAndTypeAndKeywordAndLocalDateGreaterThanEqual(
         userId: Long,
         type: PushSendType,
         keyword: String,
         localDate: LocalDate,
-    ): Boolean = jpaRepo.existsByUserIdAndTypeAndKeywordAndLocalDateGreaterThanEqual(userId, type, keyword, localDate)
+    ): Boolean = jpaRepository.existsByUserIdAndTypeAndKeywordAndLocalDateGreaterThanEqual(userId, type, keyword, localDate)
 
-    override fun save(log: PushSendLog): PushSendLog = jpaRepo.save(log)
+    override fun save(log: PushSendLog): PushSendLog = jpaRepository.save(log)
 }

@@ -9,11 +9,11 @@ import org.springframework.stereotype.Component
  */
 @Component
 class RefreshTokenRepositoryAdapter(
-    private val jpaRepo: JpaRefreshTokenRepository,
+    private val jpaRepository: JpaRefreshTokenRepository,
 ) : RefreshTokenRepository {
-    override fun findByTokenHash(tokenHash: String): RefreshToken? = jpaRepo.findByTokenHash(tokenHash).orElse(null)
+    override fun findByTokenHash(tokenHash: String): RefreshToken? = jpaRepository.findByTokenHash(tokenHash).orElse(null)
 
-    override fun save(token: RefreshToken): RefreshToken = jpaRepo.save(token)
+    override fun save(token: RefreshToken): RefreshToken = jpaRepository.save(token)
 
-    override fun deleteAllByUserId(userId: Long) = jpaRepo.deleteAllByUserId(userId)
+    override fun deleteAllByUserId(userId: Long) = jpaRepository.deleteAllByUserId(userId)
 }

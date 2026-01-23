@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component
 @Component
 class FirebaseFcmClient(
     private val firebaseApp: FirebaseApp?,
-    private val pushTokenRepo: PushTokenRepository,
+    private val pushTokenRepository: PushTokenRepository,
 ) : FcmClient {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -59,7 +59,7 @@ class FirebaseFcmClient(
                     (e.cause?.message?.contains("UNREGISTERED", ignoreCase = true) == true)
 
             if (isUnregistered) {
-                val deleted = pushTokenRepo.deleteByToken(token)
+                val deleted = pushTokenRepository.deleteByToken(token)
                 log.info(
                     "[FCM] token unregistered -> deleted={} tokenPrefix={} title={}",
                     deleted,

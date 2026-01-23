@@ -9,9 +9,9 @@ import org.springframework.stereotype.Component
  */
 @Component
 class PushSettingRepositoryAdapter(
-    private val jpaRepo: JpaPushSettingRepository,
+    private val jpaRepository: JpaPushSettingRepository,
 ) : PushSettingRepository {
-    override fun findById(userId: Long): PushSetting? = jpaRepo.findById(userId).orElse(null)
+    override fun findById(userId: Long): PushSetting? = jpaRepository.findById(userId).orElse(null)
 
-    override fun save(setting: PushSetting): PushSetting = jpaRepo.save(setting)
+    override fun save(setting: PushSetting): PushSetting = jpaRepository.save(setting)
 }

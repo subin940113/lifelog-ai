@@ -9,29 +9,29 @@ import org.springframework.stereotype.Component
  */
 @Component
 class PushTokenRepositoryAdapter(
-    private val jpaRepo: JpaPushTokenRepository,
+    private val jpaRepository: JpaPushTokenRepository,
 ) : PushTokenRepository {
     override fun findByUserIdAndToken(
         userId: Long,
         token: String,
-    ): PushToken? = jpaRepo.findByUserIdAndToken(userId, token)
+    ): PushToken? = jpaRepository.findByUserIdAndToken(userId, token)
 
-    override fun findByUserIdAndEnabledTrue(userId: Long): List<PushToken> = jpaRepo.findByUserIdAndEnabledTrue(userId)
+    override fun findByUserIdAndEnabledTrue(userId: Long): List<PushToken> = jpaRepository.findByUserIdAndEnabledTrue(userId)
 
-    override fun findEnabledByUserId(userId: Long): List<PushToken> = jpaRepo.findEnabledByUserId(userId)
+    override fun findEnabledByUserId(userId: Long): List<PushToken> = jpaRepository.findEnabledByUserId(userId)
 
-    override fun save(token: PushToken): PushToken = jpaRepo.save(token)
+    override fun save(token: PushToken): PushToken = jpaRepository.save(token)
 
-    override fun saveAll(tokens: List<PushToken>): List<PushToken> = jpaRepo.saveAll(tokens)
+    override fun saveAll(tokens: List<PushToken>): List<PushToken> = jpaRepository.saveAll(tokens)
 
     override fun deleteByUserIdAndToken(
         userId: Long,
         token: String,
-    ): Long = jpaRepo.deleteByUserIdAndToken(userId, token)
+    ): Long = jpaRepository.deleteByUserIdAndToken(userId, token)
 
-    override fun findDistinctEnabledUserIds(): List<Long> = jpaRepo.findDistinctEnabledUserIds()
+    override fun findDistinctEnabledUserIds(): List<Long> = jpaRepository.findDistinctEnabledUserIds()
 
-    override fun findAllByUserIdAndEnabledTrue(userId: Long): List<PushToken> = jpaRepo.findAllByUserIdAndEnabledTrue(userId)
+    override fun findAllByUserIdAndEnabledTrue(userId: Long): List<PushToken> = jpaRepository.findAllByUserIdAndEnabledTrue(userId)
 
-    override fun deleteByToken(token: String) = jpaRepo.deleteByToken(token)
+    override fun deleteByToken(token: String) = jpaRepository.deleteByToken(token)
 }

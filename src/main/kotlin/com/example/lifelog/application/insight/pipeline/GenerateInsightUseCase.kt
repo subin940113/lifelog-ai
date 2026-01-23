@@ -17,7 +17,7 @@ class GenerateInsightUseCase(
     private val contextBuilder: InsightContextBuilder,
     private val generator: InsightGeneratorRouter,
     private val insightRepository: InsightRepository,
-    private val cooldownRepo: InsightCooldownRepository,
+    private val cooldownRepository: InsightCooldownRepository,
     private val eventPublisher: InsightEventPublisher,
     private val logEncryption: LogEncryption,
     private val clock: Clock = Clock.systemUTC(),
@@ -49,7 +49,7 @@ class GenerateInsightUseCase(
                 ),
             )
 
-        cooldownRepo.markRun(userId, Instant.now(clock))
+        cooldownRepository.markRun(userId, Instant.now(clock))
 
         // 저장 성공 시점(트랜잭션 커밋 후 푸시 발송되도록 이벤트만 발행)
         val insightId = saved.id ?: return

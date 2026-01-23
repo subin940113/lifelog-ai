@@ -10,14 +10,14 @@ import org.springframework.stereotype.Component
  */
 @Component
 class OAuthAccountRepositoryAdapter(
-    private val jpaRepo: JpaOAuthAccountRepository,
+    private val jpaRepository: JpaOAuthAccountRepository,
 ) : OAuthAccountRepository {
     override fun findByProviderAndProviderUserId(
         provider: OAuthProvider,
         providerUserId: String,
-    ): OAuthAccount? = jpaRepo.findByProviderAndProviderUserId(provider, providerUserId)
+    ): OAuthAccount? = jpaRepository.findByProviderAndProviderUserId(provider, providerUserId)
 
-    override fun save(account: OAuthAccount): OAuthAccount = jpaRepo.save(account)
+    override fun save(account: OAuthAccount): OAuthAccount = jpaRepository.save(account)
 
-    override fun deleteAllByUserId(userId: Long) = jpaRepo.deleteAllByUserId(userId)
+    override fun deleteAllByUserId(userId: Long) = jpaRepository.deleteAllByUserId(userId)
 }
