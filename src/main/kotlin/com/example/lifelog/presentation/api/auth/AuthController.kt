@@ -35,6 +35,11 @@ class AuthController(
         @RequestBody request: OAuthAccessTokenLoginRequest,
     ): AuthLoginResult = loginUseCase.loginNaver(request.accessToken)
 
+    @PostMapping("/oauth/apple")
+    fun loginApple(
+        @RequestBody request: AppleLoginRequest,
+    ): AuthLoginResult = loginUseCase.loginApple(request.authorizationCode)
+
     @PostMapping("/refresh")
     fun refresh(
         @RequestBody request: com.example.lifelog.application.auth.TokenRefreshRequest,

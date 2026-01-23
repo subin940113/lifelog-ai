@@ -7,4 +7,5 @@ enum class OAuthProvider {
     GOOGLE,
     KAKAO,
     NAVER,
+    APPLE,
 }

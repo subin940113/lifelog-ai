@@ -29,3 +29,10 @@ interface KakaoOAuthProvider {
 interface NaverOAuthProvider {
     fun fetchProfile(accessToken: String): OAuthProfile
 }
+
+/**
+ * Apple OAuth Provider 인터페이스
+ */
+interface AppleOAuthProvider {
+    fun fetchProfile(authorizationCode: String): OAuthProfile
+}

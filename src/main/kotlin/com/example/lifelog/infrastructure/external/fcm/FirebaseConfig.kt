@@ -17,7 +17,6 @@ class FirebaseConfig(
     @Value("\${lifelog.push.fcm.serviceAccountPath}")
     private val serviceAccountPath: String,
 ) {
-
     @Bean
     fun firebaseApp(): FirebaseApp {
         val resource = resolveResource(serviceAccountPath.trim())
@@ -25,14 +24,16 @@ class FirebaseConfig(
         if (!resource.exists()) {
             throw FileNotFoundException(
                 "FCM service account file not found. " +
-                        "path='$serviceAccountPath', resolvedResource='${resource.description}'"
+                    "path='$serviceAccountPath', resolvedResource='${resource.description}'",
             )
         }
 
         resource.inputStream.use { input ->
-            val options = FirebaseOptions.builder()
-                .setCredentials(GoogleCredentials.fromStream(input))
-                .build()
+            val options =
+                FirebaseOptions
+                    .builder()
+                    .setCredentials(GoogleCredentials.fromStream(input))
+                    .build()
 
             return if (FirebaseApp.getApps().isEmpty()) {
                 FirebaseApp.initializeApp(options)

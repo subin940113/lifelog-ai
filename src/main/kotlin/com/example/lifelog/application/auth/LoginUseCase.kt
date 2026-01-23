@@ -8,6 +8,7 @@ import com.example.lifelog.domain.auth.OAuthAccountRepository
 import com.example.lifelog.domain.auth.OAuthProvider
 import com.example.lifelog.domain.user.User
 import com.example.lifelog.domain.user.UserRepository
+import com.example.lifelog.infrastructure.external.oauth.AppleOAuthProvider
 import com.example.lifelog.infrastructure.external.oauth.GoogleOAuthProvider
 import com.example.lifelog.infrastructure.external.oauth.KakaoOAuthProvider
 import com.example.lifelog.infrastructure.external.oauth.NaverOAuthProvider
@@ -23,6 +24,7 @@ class LoginUseCase(
     private val googleOAuthProvider: GoogleOAuthProvider,
     private val kakaoOAuthProvider: KakaoOAuthProvider,
     private val naverOAuthProvider: NaverOAuthProvider,
+    private val appleOAuthProvider: AppleOAuthProvider,
     private val jwtProvider: JwtProvider,
     private val userRepository: UserRepository,
     private val oauthAccountRepository: OAuthAccountRepository,
@@ -62,6 +64,17 @@ class LoginUseCase(
         )
     }
 
+    @Transactional
+    fun loginApple(authorizationCode: String): AuthLoginResult {
+        val profile = appleOAuthProvider.fetchProfile(authorizationCode)
+
+        return loginOrSignUp(
+            provider = OAuthProvider.APPLE,
+            providerUserId = profile.providerUserId,
+            displayNameCandidate = profile.email,
+        )
+    }
+
     private fun loginOrSignUp(
         provider: OAuthProvider,
         providerUserId: String,
@@ -85,8 +98,8 @@ class LoginUseCase(
             )
         }
 
-        // 신규 유저 생성: displayName이 비면 fallback
-        val safeName = (displayNameCandidate ?: "").trim().ifBlank { NicknameGenerator.generateRandomNickname() }
+        // 신규 유저 생성
+        val safeName = NicknameGenerator.generateRandomNickname()
         val newUser = userRepository.save(User(displayName = safeName))
 
         oauthAccountRepository.save(
