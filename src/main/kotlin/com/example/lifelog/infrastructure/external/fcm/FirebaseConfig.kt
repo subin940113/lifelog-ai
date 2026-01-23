@@ -21,6 +21,8 @@ class FirebaseConfig(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val appName = "lifelog-fcm"
+    private val projectId = "bluelog-4bc1c"
+    private val fcmScope = "https://www.googleapis.com/auth/firebase.messaging"
 
     @Bean
     fun firebaseApp(): FirebaseApp {
@@ -29,47 +31,65 @@ class FirebaseConfig(
         if (!resource.exists()) {
             throw FileNotFoundException(
                 "FCM service account file not found. " +
-                    "path='$serviceAccountPath', resolvedResource='${resource.description}'",
+                        "path='$serviceAccountPath', resolvedResource='${resource.description}'",
             )
         }
 
         resource.inputStream.use { input ->
-            // 1. 명시적으로 FCM scope 포함한 credentials 생성
+            // 1) 서비스계정 로드 + FCM scope 지정
             val credentials =
                 GoogleCredentials
                     .fromStream(input)
-                    .createScoped(
-                        listOf("https://www.googleapis.com/auth/firebase.messaging"),
-                    )
+                    .createScoped(listOf(fcmScope))
 
-            // 2. FirebaseOptions 구성 (projectId 반드시 명시)
+            // 2) [핵심] 부팅 시점에 Access Token을 강제로 발급해본다.
+            //    - 여기서 실패하면 FCM은 절대 동작할 수 없으니(Always-on) 서버를 즉시 실패시키는 게 맞다.
+            try {
+                val token = credentials.refreshAccessToken()
+                log.info(
+                    "[FCM] access token issued. len={} expiresAt={} projectId={}",
+                    token.tokenValue.length,
+                    token.expirationTime,
+                    projectId,
+                )
+            } catch (e: Exception) {
+                log.error(
+                    "[FCM] access token issuance FAILED. " +
+                            "Check: service account key validity, outbound network/proxy, server clock, IAM policies. " +
+                            "resource={}",
+                    resource.description,
+                    e,
+                )
+                throw e
+            }
+
+            // 3) FirebaseOptions 구성 (projectId 명시)
             val options =
                 FirebaseOptions
                     .builder()
                     .setCredentials(credentials)
-                    .setProjectId("bluelog-4bc1c")
+                    .setProjectId(projectId)
                     .build()
 
-            // 3. default app 충돌 방지를 위해 named app 사용
-            val existingApp =
-                FirebaseApp.getApps().firstOrNull { it.name == appName }
+            // 4) default app 충돌 방지: named app 사용
+            val existingApp = FirebaseApp.getApps().firstOrNull { it.name == appName }
+            val app = existingApp ?: FirebaseApp.initializeApp(options, appName)
 
-            val app =
-                existingApp ?: FirebaseApp.initializeApp(options, appName)
-
-            // 4. 부팅 시점 워밍업 (인증 문제를 send 시점이 아니라 여기서 터뜨리기)
+            // 5) FirebaseMessaging 워밍업 (추가 안전장치)
             try {
                 FirebaseMessaging.getInstance(app)
                 log.info(
-                    "[FCM] firebase app initialized name={} resource={}",
+                    "[FCM] firebase app initialized name={} resource={} projectId={}",
                     app.name,
                     resource.description,
+                    projectId,
                 )
             } catch (e: Exception) {
                 log.error(
-                    "[FCM] firebase app initialization failed name={} resource={}",
+                    "[FCM] firebase messaging init FAILED name={} resource={} projectId={}",
                     app.name,
                     resource.description,
+                    projectId,
                     e,
                 )
                 throw e
