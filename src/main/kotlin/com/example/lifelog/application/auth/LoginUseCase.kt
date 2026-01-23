@@ -3,6 +3,8 @@ package com.example.lifelog.application.auth
 import com.example.lifelog.common.NicknameGenerator
 import com.example.lifelog.common.exception.ErrorCode
 import com.example.lifelog.common.exception.NotFoundException
+import com.example.lifelog.domain.auth.AppleRefreshToken
+import com.example.lifelog.domain.auth.AppleRefreshTokenRepository
 import com.example.lifelog.domain.auth.OAuthAccount
 import com.example.lifelog.domain.auth.OAuthAccountRepository
 import com.example.lifelog.domain.auth.OAuthProvider
@@ -15,6 +17,7 @@ import com.example.lifelog.infrastructure.external.oauth.NaverOAuthProvider
 import com.example.lifelog.infrastructure.security.JwtProvider
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Instant
 
 /**
  * OAuth 로그인 Use Case
@@ -28,6 +31,7 @@ class LoginUseCase(
     private val jwtProvider: JwtProvider,
     private val userRepository: UserRepository,
     private val oauthAccountRepository: OAuthAccountRepository,
+    private val appleRefreshTokenRepository: AppleRefreshTokenRepository,
     private val refreshTokenManagementUseCase: RefreshTokenManagementUseCase,
 ) {
     @Transactional
@@ -66,12 +70,14 @@ class LoginUseCase(
 
     @Transactional
     fun loginApple(authorizationCode: String): AuthLoginResult {
-        val profile = appleOAuthProvider.fetchProfile(authorizationCode)
+        val profileWithToken = appleOAuthProvider.fetchProfileAndRefreshToken(authorizationCode)
+        val profile = profileWithToken.profile
 
         return loginOrSignUp(
             provider = OAuthProvider.APPLE,
             providerUserId = profile.providerUserId,
             displayNameCandidate = profile.email,
+            appleRefreshToken = profileWithToken.refreshToken,
         )
     }
 
@@ -79,6 +85,7 @@ class LoginUseCase(
         provider: OAuthProvider,
         providerUserId: String,
         displayNameCandidate: String?,
+        appleRefreshToken: String? = null,
     ): AuthLoginResult {
         val existingAccount =
             oauthAccountRepository.findByProviderAndProviderUserId(provider, providerUserId)
@@ -89,6 +96,26 @@ class LoginUseCase(
                     ?: throw NotFoundException(ErrorCode.NOT_FOUND_USER, "User not found: ${existingAccount.userId}")
             user.updateLastLoginAt()
             userRepository.save(user)
+
+            // 애플 계정인 경우 refresh_token 저장/업데이트
+            if (provider == OAuthProvider.APPLE && appleRefreshToken != null) {
+                val now = Instant.now()
+                val existingToken = appleRefreshTokenRepository.findByUserId(existingAccount.userId)
+                if (existingToken != null) {
+                    existingToken.refreshToken = appleRefreshToken
+                    existingToken.updatedAt = now
+                    appleRefreshTokenRepository.save(existingToken)
+                } else {
+                    appleRefreshTokenRepository.save(
+                        AppleRefreshToken(
+                            userId = existingAccount.userId,
+                            refreshToken = appleRefreshToken,
+                            createdAt = now,
+                            updatedAt = now,
+                        ),
+                    )
+                }
+            }
 
             return AuthLoginResult(
                 accessToken = jwtProvider.createAccessToken(existingAccount.userId),
@@ -109,6 +136,19 @@ class LoginUseCase(
                 userId = newUser.id,
             ),
         )
+
+        // 애플 계정인 경우 refresh_token 저장
+        if (provider == OAuthProvider.APPLE && appleRefreshToken != null) {
+            val now = Instant.now()
+            appleRefreshTokenRepository.save(
+                AppleRefreshToken(
+                    userId = newUser.id,
+                    refreshToken = appleRefreshToken,
+                    createdAt = now,
+                    updatedAt = now,
+                ),
+            )
+        }
 
         return AuthLoginResult(
             accessToken = jwtProvider.createAccessToken(newUser.id),

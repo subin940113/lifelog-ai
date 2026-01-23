@@ -35,4 +35,28 @@ interface NaverOAuthProvider {
  */
 interface AppleOAuthProvider {
     fun fetchProfile(authorizationCode: String): OAuthProfile
+
+    /**
+     * 애플 프로필 및 refresh_token 조회
+     * refresh_token은 계정 삭제 시 revoke에 사용됨
+     */
+    fun fetchProfileAndRefreshToken(authorizationCode: String): AppleProfileWithToken
+
+    /**
+     * 애플 토큰 revoke (계정 삭제 시 호출)
+     * @param refreshToken 또는 accessToken
+     * @param tokenTypeHint "refresh_token" 또는 "access_token"
+     */
+    fun revokeToken(
+        token: String,
+        tokenTypeHint: String = "refresh_token",
+    )
 }
+
+/**
+ * 애플 프로필 및 refresh_token
+ */
+data class AppleProfileWithToken(
+    val profile: OAuthProfile,
+    val refreshToken: String?,
+)

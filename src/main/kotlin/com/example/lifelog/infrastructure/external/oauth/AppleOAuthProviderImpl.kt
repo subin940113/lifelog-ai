@@ -81,6 +81,52 @@ class AppleOAuthProviderImpl(
         }
     }
 
+    override fun fetchProfileAndRefreshToken(authorizationCode: String): AppleProfileWithToken {
+        val code = authorizationCode.trim()
+        if (code.isEmpty()) {
+            throw ValidationException(ErrorCode.VALIDATION_REQUIRED, "authorizationCode is empty")
+        }
+
+        try {
+            // 1. authorizationCode로 토큰 교환
+            val tokenResponse = exchangeToken(code)
+            val idToken =
+                tokenResponse.idToken
+                    ?: throw BusinessException(ErrorCode.BUSINESS_OAUTH_PROVIDER_ERROR, "Apple id_token missing")
+
+            // 2. id_token에서 사용자 정보 추출
+            val profile = parseIdToken(idToken)
+
+            return AppleProfileWithToken(
+                profile = profile,
+                refreshToken = tokenResponse.refreshToken,
+            )
+        } catch (e: WebClientResponseException.Unauthorized) {
+            val responseBody = e.responseBodyAsString
+            log.warn(
+                "[OAUTH][APPLE] unauthorized (401). clientId={}, teamId={}, keyId={}, body={}",
+                properties.clientId,
+                properties.teamId,
+                properties.keyId,
+                responseBody,
+                e,
+            )
+            throw BusinessException(ErrorCode.BUSINESS_OAUTH_UNAUTHORIZED, "Apple unauthorized (401). body=$responseBody", e)
+        } catch (e: WebClientResponseException) {
+            val responseBody = e.responseBodyAsString
+            log.error(
+                "[OAUTH][APPLE] token exchange failed. clientId={}, teamId={}, keyId={}, status={}, body={}",
+                properties.clientId,
+                properties.teamId,
+                properties.keyId,
+                e.statusCode.value(),
+                responseBody,
+                e,
+            )
+            throw BusinessException(ErrorCode.BUSINESS_OAUTH_PROVIDER_ERROR, "Apple token exchange failed. body=$responseBody", e)
+        }
+    }
+
     private fun exchangeToken(authorizationCode: String): AppleTokenResponse {
         val clientSecret = generateClientSecret()
 
@@ -202,6 +248,57 @@ class AppleOAuthProviderImpl(
             )
         } catch (e: Exception) {
             throw BusinessException(ErrorCode.BUSINESS_OAUTH_PROVIDER_ERROR, "Failed to parse Apple id_token", e)
+        }
+    }
+
+    override fun revokeToken(
+        token: String,
+        tokenTypeHint: String,
+    ) {
+        val trimmedToken = token.trim()
+        if (trimmedToken.isEmpty()) {
+            log.warn("[OAUTH][APPLE] revokeToken called with empty token")
+            return
+        }
+
+        try {
+            val clientSecret = generateClientSecret()
+
+            val formData: MultiValueMap<String, String> = LinkedMultiValueMap()
+            formData.add("client_id", properties.clientId)
+            formData.add("client_secret", clientSecret)
+            formData.add("token", trimmedToken)
+            formData.add("token_type_hint", tokenTypeHint)
+
+            webClient
+                .post()
+                .uri("https://appleid.apple.com/auth/revoke")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .bodyValue(formData)
+                .retrieve()
+                .bodyToMono(String::class.java)
+                .timeout(Duration.ofSeconds(10))
+                .block()
+
+            log.info("[OAUTH][APPLE] token revoked successfully. tokenTypeHint={}", tokenTypeHint)
+        } catch (e: WebClientResponseException) {
+            val responseBody = e.responseBodyAsString
+            // 이미 revoke된 토큰이거나 유효하지 않은 토큰일 수 있음 (정상적인 경우)
+            log.warn(
+                "[OAUTH][APPLE] revokeToken failed. status={}, body={}, tokenTypeHint={}",
+                e.statusCode.value(),
+                responseBody,
+                tokenTypeHint,
+                e,
+            )
+            // 계정 삭제는 계속 진행되어야 하므로 예외를 던지지 않음
+        } catch (e: Exception) {
+            log.error(
+                "[OAUTH][APPLE] revokeToken failed unexpectedly. tokenTypeHint={}",
+                tokenTypeHint,
+                e,
+            )
+            // 계정 삭제는 계속 진행되어야 하므로 예외를 던지지 않음
         }
     }
 }

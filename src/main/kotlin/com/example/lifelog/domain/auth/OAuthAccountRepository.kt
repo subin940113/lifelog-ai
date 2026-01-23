@@ -10,6 +10,8 @@ interface OAuthAccountRepository {
         providerUserId: String,
     ): OAuthAccount?
 
+    fun findByUserId(userId: Long): List<OAuthAccount>
+
     fun save(account: OAuthAccount): OAuthAccount
 
     fun deleteAllByUserId(userId: Long)

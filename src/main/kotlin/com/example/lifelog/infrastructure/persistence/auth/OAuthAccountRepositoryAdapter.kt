@@ -17,6 +17,8 @@ class OAuthAccountRepositoryAdapter(
         providerUserId: String,
     ): OAuthAccount? = jpaRepository.findByProviderAndProviderUserId(provider, providerUserId)
 
+    override fun findByUserId(userId: Long): List<OAuthAccount> = jpaRepository.findByUserId(userId)
+
     override fun save(account: OAuthAccount): OAuthAccount = jpaRepository.save(account)
 
     override fun deleteAllByUserId(userId: Long) = jpaRepository.deleteAllByUserId(userId)
