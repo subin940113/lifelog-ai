@@ -6,6 +6,7 @@ import com.example.lifelog.domain.insight.InsightCooldownRepository
 import com.example.lifelog.domain.insight.InsightTriggerDecision
 import com.example.lifelog.domain.log.RawLog
 import com.example.lifelog.infrastructure.config.InsightPolicyProperties
+import com.example.lifelog.infrastructure.security.LogEncryption
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Clock
@@ -18,6 +19,7 @@ class DefaultInsightTriggerPolicy(
     private val properties: InsightPolicyProperties,
     private val cooldownRepository: InsightCooldownRepository,
     private val preferenceReader: InsightPreferenceReader, // 5번: 사용자 피드백 기반 보수화
+    private val logEncryption: LogEncryption,
     private val clock: Clock = Clock.systemUTC(),
 ) : InsightTriggerPolicy {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -28,18 +30,21 @@ class DefaultInsightTriggerPolicy(
     ): InsightTriggerDecision {
         val gate = getInsightGateUseCase.execute(userId)
 
+        // 로그 내용 복호화
+        val decryptedContent = logEncryption.decrypt(rawLog.content)
+
         // Gate 상태 로깅
         if (!gate.enabled) {
             log.info(
                 "[InsightTrigger] gate disabled | userId={} keywords={} rawLength={}",
                 userId,
                 gate.keywords.size,
-                rawLog.content.length,
+                decryptedContent.length,
             )
             return InsightTriggerDecision(false, "gate_disabled")
         }
 
-        val content = rawLog.content.trim()
+        val content = decryptedContent.trim()
         if (content.length < properties.minChars) {
             log.info(
                 "[InsightTrigger] too short | userId={} len={} minChars={}",

@@ -5,6 +5,7 @@ import com.example.lifelog.domain.log.RawLog
 import com.example.lifelog.domain.signal.KeywordSignalState
 import com.example.lifelog.domain.signal.KeywordSignalStateRepository
 import com.example.lifelog.domain.signal.KeywordSignalStatus
+import com.example.lifelog.infrastructure.security.LogEncryption
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -23,6 +24,7 @@ import java.util.Locale
 class UpdateSignalUseCase(
     private val interestRepository: InterestRepository,
     private val stateRepository: KeywordSignalStateRepository,
+    private val logEncryption: LogEncryption,
 ) {
     @Transactional
     fun execute(rawLog: RawLog) {
@@ -33,8 +35,9 @@ class UpdateSignalUseCase(
         val keywords = interestRepository.findAllByUserIdOrderByCreatedAtDesc(userId)
         if (keywords.isEmpty()) return
 
-        // content normalize (InterestKeyword.keywordKey 규칙과 동일: trim + lowercase)
-        val contentNormalized = normalize(rawLog.content)
+        // 로그 내용 복호화 후 normalize (InterestKeyword.keywordKey 규칙과 동일: trim + lowercase)
+        val decryptedContent = logEncryption.decrypt(rawLog.content)
+        val contentNormalized = normalize(decryptedContent)
 
         // 키워드별로 상태 조회/초기 생성 후, ACTIVE일 때만 candy 누적
         for (kw in keywords) {

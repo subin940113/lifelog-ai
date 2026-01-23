@@ -6,6 +6,7 @@ import com.example.lifelog.domain.insight.RecentInsight
 import com.example.lifelog.domain.log.LogRepository
 import com.example.lifelog.domain.log.RawLog
 import com.example.lifelog.infrastructure.config.InsightPolicyProperties
+import com.example.lifelog.infrastructure.security.LogEncryption
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 import java.time.Clock
@@ -17,6 +18,7 @@ class DefaultInsightContextBuilder(
     private val logRepository: LogRepository,
     private val insightRepository: InsightRepository,
     private val properties: InsightPolicyProperties,
+    private val logEncryption: LogEncryption,
     private val clock: Clock = Clock.systemUTC(),
 ) : InsightContextBuilder {
     override fun build(
@@ -34,8 +36,26 @@ class DefaultInsightContextBuilder(
             )
 
         // triggerLog가 recentLogs에 없을 수도 있으므로, 포함 보장
+        // 암호화된 로그들을 복호화된 내용으로 변환
+        val decryptedRawLog =
+            RawLog(
+                id = rawLog.id,
+                userId = rawLog.userId,
+                content = logEncryption.decrypt(rawLog.content),
+                createdAt = rawLog.createdAt,
+            )
+        val decryptedRecentLogs =
+            recentLogs.map { log ->
+                RawLog(
+                    id = log.id,
+                    userId = log.userId,
+                    content = logEncryption.decrypt(log.content),
+                    createdAt = log.createdAt,
+                )
+            }
+
         val logs =
-            (listOf(rawLog) + recentLogs)
+            (listOf(decryptedRawLog) + decryptedRecentLogs)
                 .distinctBy { it.id } // RawLog에 id가 있다고 가정. 없다면 content+createdAt 등으로 대체
                 .sortedByDescending { it.createdAt ?: Instant.EPOCH } // most recent first
 
@@ -63,7 +83,7 @@ class DefaultInsightContextBuilder(
         return InsightContext(
             userId = userId,
             matchedKeyword = matchedKeyword,
-            triggerLog = rawLog,
+            triggerLog = decryptedRawLog,
             sourceLogId = rawLog.id,
             logs = logs,
             recentInsights = insights,

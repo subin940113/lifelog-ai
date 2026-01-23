@@ -5,6 +5,7 @@ import com.example.lifelog.domain.insight.InsightCooldownRepository
 import com.example.lifelog.domain.insight.InsightCreatedEvent
 import com.example.lifelog.domain.insight.InsightRepository
 import com.example.lifelog.domain.log.RawLog
+import com.example.lifelog.infrastructure.security.LogEncryption
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
@@ -18,13 +19,15 @@ class GenerateInsightUseCase(
     private val insightRepository: InsightRepository,
     private val cooldownRepo: InsightCooldownRepository,
     private val eventPublisher: InsightEventPublisher,
+    private val logEncryption: LogEncryption,
     private val clock: Clock = Clock.systemUTC(),
 ) {
     @Transactional
     fun execute(rawLog: RawLog) {
         val userId = rawLog.userId
-        val content = rawLog.content.trim()
-        if (content.isEmpty()) return
+        // 로그 내용 복호화
+        val decryptedContent = logEncryption.decrypt(rawLog.content).trim()
+        if (decryptedContent.isEmpty()) return
 
         val decision = triggerPolicy.decide(userId, rawLog)
         if (!decision.shouldRun) return
