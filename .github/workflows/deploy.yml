@@ -35,16 +35,10 @@ jobs:
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ github.sha }}
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          script: |
-            set -e
-            cd /opt/bluelog
-            docker compose pull app
-            docker compose up -d app
-            docker compose restart nginx
-            docker image prune -f
+      - name: Trigger Deploy Hook (no SSH)
+        run: |
+          set -euo pipefail
+          curl -fsS -X POST "${{ secrets.DEPLOY_HOOK_URL }}" \
+            -H "Authorization: Bearer ${{ secrets.DEPLOY_HOOK_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"ref":"main","sha":"${{ github.sha }}","image":"ghcr.io/${{ github.repository }}:latest"}'
