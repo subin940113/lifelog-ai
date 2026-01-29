@@ -15,7 +15,7 @@
 ## 주요 기능
 
 ### 1. 인증 및 사용자 관리
-- OAuth 2.0 기반 소셜 로그인 (Google, Kakao, Naver)
+- OAuth 2.0 기반 소셜 로그인 (Google, Kakao, Naver, Apple)
 - JWT 기반 인증 및 토큰 갱신
 - 사용자 프로필 관리
 
